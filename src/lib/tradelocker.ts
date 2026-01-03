@@ -69,9 +69,11 @@ export class TradeLockerAPI {
 
       this.accessToken = response.data.accessToken || null
       return this.accessToken || ''
-    } catch (error) {
+    } catch (error: any) {
       console.error('TradeLocker authentication failed:', error)
-      throw new Error('Failed to authenticate with TradeLocker')
+      console.error('Error response:', error.response?.data)
+      console.error('Error status:', error.response?.status)
+      throw new Error(error.response?.data?.error || 'Failed to authenticate with TradeLocker')
     }
   }
 
