@@ -1,9 +1,9 @@
-const axios = require('axios');
+import axios from 'axios';
 
 const TRADELOCKER_LIVE_URL = 'https://live.tradelocker.com';
 const TRADELOCKER_API_KEY = process.env.VITE_TRADELOCKER_API_KEY;
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -35,4 +35,4 @@ module.exports = async (req, res) => {
       error: error.response?.data?.message || 'Failed to fetch accounts'
     });
   }
-};
+}
