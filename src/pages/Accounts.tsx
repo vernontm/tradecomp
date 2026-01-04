@@ -20,6 +20,8 @@ export default function Accounts() {
   })
   const [editingNickname, setEditingNickname] = useState<string | null>(null)
   const [nicknameValue, setNicknameValue] = useState('')
+  const [editingBalance, setEditingBalance] = useState<string | null>(null)
+  const [balanceValue, setBalanceValue] = useState('')
 
   useEffect(() => {
     fetchExistingAccounts()
@@ -246,6 +248,42 @@ export default function Accounts() {
     }
   }
 
+  const startEditingBalance = (account: TradingAccount) => {
+    setEditingBalance(account.id)
+    setBalanceValue(account.starting_balance?.toString() || '0')
+  }
+
+  const cancelEditingBalance = () => {
+    setEditingBalance(null)
+    setBalanceValue('')
+  }
+
+  const saveBalance = async (accountId: string) => {
+    const balance = parseFloat(balanceValue) || 0
+    try {
+      const { error } = await supabase
+        .from('trading_accounts')
+        .update({ 
+          starting_balance: balance,
+          current_balance: balance 
+        })
+        .eq('id', accountId)
+
+      if (error) throw error
+
+      setExistingAccounts(prev =>
+        prev.map(acc =>
+          acc.id === accountId ? { ...acc, starting_balance: balance, current_balance: balance } : acc
+        )
+      )
+      setEditingBalance(null)
+      setBalanceValue('')
+      setMessage({ type: 'success', text: 'Balance updated successfully.' })
+    } catch (error: any) {
+      setMessage({ type: 'error', text: 'Failed to update balance.' })
+    }
+  }
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
@@ -354,12 +392,49 @@ export default function Accounts() {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <p className="text-lg font-bold text-white">
-                        {account.currency || 'USD'} {(account.current_balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </p>
-                      <p className="text-xs text-white/50">
-                        Started: {(account.starting_balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </p>
+                      {editingBalance === account.id ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-white/50 text-sm">{account.currency || 'USD'}</span>
+                          <input
+                            type="number"
+                            value={balanceValue}
+                            onChange={(e) => setBalanceValue(e.target.value)}
+                            placeholder="0.00"
+                            step="0.01"
+                            className="w-24 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm text-right focus:outline-none focus:border-primary"
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') saveBalance(account.id)
+                              if (e.key === 'Escape') cancelEditingBalance()
+                            }}
+                          />
+                          <button
+                            onClick={() => saveBalance(account.id)}
+                            className="p-1 text-green-400 hover:bg-green-500/20 rounded"
+                          >
+                            <Check size={14} />
+                          </button>
+                          <button
+                            onClick={cancelEditingBalance}
+                            className="p-1 text-red-400 hover:bg-red-500/20 rounded"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div 
+                          className="cursor-pointer hover:bg-white/5 rounded px-2 py-1 -mr-2"
+                          onClick={() => startEditingBalance(account)}
+                          title="Click to edit balance"
+                        >
+                          <p className="text-lg font-bold text-white">
+                            {account.currency || 'USD'} {(account.current_balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </p>
+                          <p className="text-xs text-white/50">
+                            Started: {(account.starting_balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                      )}
                     </div>
                     <button
                       onClick={() => handleToggleLeaderboard(account)}

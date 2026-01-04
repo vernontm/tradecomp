@@ -106,11 +106,11 @@ export class TradeLockerAPI {
         accountId: account.id?.toString() || account.accountId?.toString() || '',
         accNum: account.accNum?.toString() || account.accountNumber?.toString() || '',
         name: account.name || account.accountName || `Account ${account.accNum || account.id}`,
-        balance: account.balance || 0,
-        equity: account.equity || 0,
-        margin: account.margin || 0,
-        freeMargin: account.freeMargin || 0,
-        profit: account.profit || 0,
+        balance: parseFloat(account.accountBalance) || account.balance || 0,
+        equity: parseFloat(account.equity) || 0,
+        margin: parseFloat(account.margin) || 0,
+        freeMargin: parseFloat(account.freeMargin) || 0,
+        profit: parseFloat(account.profit) || 0,
         currency: account.currency || 'USD'
       }))
     } catch (error) {
