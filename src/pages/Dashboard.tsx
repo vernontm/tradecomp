@@ -111,7 +111,7 @@ export default function Dashboard() {
                 <ChevronDown size={16} className={`transition-transform ${showAccountDropdown ? 'rotate-180' : ''}`} />
               </button>
               {showAccountDropdown && (
-                <div className="absolute right-0 mt-2 w-64 bg-sidebar border border-white/10 rounded-xl shadow-xl z-10">
+                <div className="absolute right-0 mt-2 w-64 bg-sidebar border border-white/10 rounded-xl shadow-xl z-50">
                   {accounts.map((acc) => (
                     <button
                       key={acc.id}

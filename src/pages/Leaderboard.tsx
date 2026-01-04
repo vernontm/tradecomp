@@ -22,11 +22,11 @@ export default function Leaderboard() {
       const formattedData: LeaderboardEntry[] = data.map((entry, index) => ({
         rank: index + 1,
         username: entry.username,
-        account_id: entry.account_id,
+        account_id: entry.id,
         starting_balance: entry.starting_balance,
         current_balance: entry.current_balance,
         profit: entry.current_balance - entry.starting_balance,
-        percentage_change: ((entry.current_balance - entry.starting_balance) / entry.starting_balance) * 100,
+        percentage_change: entry.percentage_change || ((entry.current_balance - entry.starting_balance) / entry.starting_balance) * 100,
         is_active: entry.is_active,
         last_updated: entry.last_updated,
       }))
