@@ -1,14 +1,43 @@
 import { useEffect, useState } from 'react'
 import { supabase, LeaderboardEntry } from '../lib/supabase'
-import { Trophy, TrendingUp, TrendingDown } from 'lucide-react'
+import { Trophy, TrendingUp, TrendingDown, Clock } from 'lucide-react'
 
 export default function Leaderboard() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [timeUntilNext, setTimeUntilNext] = useState<string>('')
+  const [minutesAgo, setMinutesAgo] = useState<number>(0)
 
   useEffect(() => {
     fetchLeaderboard()
   }, [])
+
+  // Update countdown timer every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (lastUpdated) {
+        const now = new Date()
+        const diffMs = now.getTime() - lastUpdated.getTime()
+        const diffMins = Math.floor(diffMs / 60000)
+        setMinutesAgo(diffMins)
+
+        // Calculate time until next 15-minute mark
+        const currentMinute = now.getMinutes()
+        const nextUpdateMinute = Math.ceil(currentMinute / 15) * 15
+        const minutesLeft = nextUpdateMinute === currentMinute ? 15 : nextUpdateMinute - currentMinute
+        const secondsLeft = 60 - now.getSeconds()
+        
+        if (minutesLeft === 0 || (minutesLeft === 15 && secondsLeft === 60)) {
+          setTimeUntilNext('< 1 min')
+        } else {
+          setTimeUntilNext(`${minutesLeft - 1}m ${secondsLeft}s`)
+        }
+      }
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [lastUpdated])
 
   const fetchLeaderboard = async () => {
     try {
@@ -32,6 +61,15 @@ export default function Leaderboard() {
       }))
 
       setLeaderboard(formattedData)
+      
+      // Find the most recent last_updated from all entries
+      if (formattedData.length > 0) {
+        const mostRecent = formattedData.reduce((latest, entry) => {
+          const entryDate = new Date(entry.last_updated)
+          return entryDate > latest ? entryDate : latest
+        }, new Date(0))
+        setLastUpdated(mostRecent)
+      }
     } catch (error) {
       console.error('Error fetching leaderboard:', error)
     } finally {
@@ -60,13 +98,31 @@ export default function Leaderboard() {
   return (
     <div className="space-y-6">
       <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-        <div className="flex items-center gap-3 mb-2">
-          <Trophy className="text-primary" size={32} />
-          <h2 className="text-2xl font-bold text-gradient-primary">Leaderboard</h2>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <Trophy className="text-primary" size={32} />
+              <h2 className="text-2xl font-bold text-gradient-primary">Leaderboard</h2>
+            </div>
+            <p className="text-white/70">
+              Rankings based on percentage gain. Compete with other traders to reach the top!
+            </p>
+          </div>
+          {lastUpdated && (
+            <div className="text-right bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+              <div className="flex items-center gap-2 text-white/70 text-sm mb-1">
+                <Clock size={14} />
+                <span>Last Updated</span>
+              </div>
+              <p className="text-white font-medium">
+                {minutesAgo === 0 ? 'Just now' : `${minutesAgo} min${minutesAgo === 1 ? '' : 's'} ago`}
+              </p>
+              <p className="text-xs text-primary mt-1">
+                Next update in {timeUntilNext}
+              </p>
+            </div>
+          )}
         </div>
-        <p className="text-white/70">
-          Rankings based on percentage gain. Compete with other traders to reach the top!
-        </p>
       </div>
 
       <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
