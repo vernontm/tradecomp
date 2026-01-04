@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const TRADELOCKER_LIVE_URL = 'https://live.tradelocker.com';
-const TRADELOCKER_API_KEY = process.env.VITE_TRADELOCKER_API_KEY;
+const TRADELOCKER_API_KEY = process.env.TRADELOCKER_API_KEY || process.env.VITE_TRADELOCKER_API_KEY;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
