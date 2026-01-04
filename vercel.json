@@ -1,7 +1,23 @@
 {
+  "functions": {
+    "api/tradelocker-auth.js": {
+      "runtime": "@vercel/node@3"
+    },
+    "api/tradelocker-accounts.js": {
+      "runtime": "@vercel/node@3"
+    }
+  },
   "rewrites": [
     {
-      "source": "/((?!api).*)",
+      "source": "/api/tradelocker-auth",
+      "destination": "/api/tradelocker-auth.js"
+    },
+    {
+      "source": "/api/tradelocker-accounts",
+      "destination": "/api/tradelocker-accounts.js"
+    },
+    {
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ],
