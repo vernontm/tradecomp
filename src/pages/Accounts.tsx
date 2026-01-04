@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase, TradingAccount } from '../lib/supabase'
 import { tradeLockerAPI, TradeLockerAccountInfo } from '../lib/tradelocker'
 import { encryptPassword } from '../lib/encryption'
-import { Wallet, AlertCircle, CheckCircle, ArrowLeft, Trash2, Eye, EyeOff, Pencil, Check, X } from 'lucide-react'
+import { Wallet, AlertCircle, CheckCircle, ArrowLeft, Trash2, Pencil, Check, X } from 'lucide-react'
 
 export default function Accounts() {
   const { user } = useAuth()
@@ -184,37 +184,75 @@ export default function Accounts() {
     }
   }
 
-  const handleToggleLeaderboard = async (account: TradingAccount) => {
-    const newValue = !account.show_on_leaderboard
-    
-    if (!newValue) {
+  const handleSelectForCompetition = async (account: TradingAccount) => {
+    // If already selected, allow deselecting (with warning)
+    if (account.show_on_leaderboard) {
       const confirmed = confirm(
-        'Warning: Hiding this account from the leaderboard will disqualify it from the competition. Are you sure?'
+        'Warning: Removing this account from the competition will disqualify it. Are you sure?'
+      )
+      if (!confirmed) return
+
+      try {
+        const { error } = await supabase
+          .from('trading_accounts')
+          .update({ show_on_leaderboard: false })
+          .eq('id', account.id)
+
+        if (error) throw error
+
+        setExistingAccounts(prev =>
+          prev.map(acc =>
+            acc.id === account.id ? { ...acc, show_on_leaderboard: false } : acc
+          )
+        )
+        setMessage({
+          type: 'success',
+          text: 'Account removed from competition.',
+        })
+      } catch (error: any) {
+        setMessage({ type: 'error', text: 'Failed to update competition status.' })
+      }
+      return
+    }
+
+    // Check if another account is already in competition
+    const currentCompetitionAccount = existingAccounts.find(acc => acc.show_on_leaderboard)
+    if (currentCompetitionAccount) {
+      const confirmed = confirm(
+        `You can only have one account in the competition at a time. This will remove "${currentCompetitionAccount.account_name || 'Account #' + currentCompetitionAccount.account_number}" from the competition and add "${account.account_name || 'Account #' + account.account_number}" instead. Continue?`
       )
       if (!confirmed) return
     }
 
     try {
+      // First, set all accounts to not show on leaderboard
+      const { error: resetError } = await supabase
+        .from('trading_accounts')
+        .update({ show_on_leaderboard: false })
+        .eq('user_id', user?.id)
+
+      if (resetError) throw resetError
+
+      // Then set the selected account to show on leaderboard
       const { error } = await supabase
         .from('trading_accounts')
-        .update({ show_on_leaderboard: newValue })
+        .update({ show_on_leaderboard: true })
         .eq('id', account.id)
 
       if (error) throw error
 
       setExistingAccounts(prev =>
-        prev.map(acc =>
-          acc.id === account.id ? { ...acc, show_on_leaderboard: newValue } : acc
-        )
+        prev.map(acc => ({
+          ...acc,
+          show_on_leaderboard: acc.id === account.id
+        }))
       )
       setMessage({
         type: 'success',
-        text: newValue
-          ? 'Account is now visible on the leaderboard.'
-          : 'Account hidden from leaderboard and disqualified from competition.',
+        text: `"${account.account_name || 'Account #' + account.account_number}" is now your competition account.`,
       })
     } catch (error: any) {
-      setMessage({ type: 'error', text: 'Failed to update leaderboard visibility.' })
+      setMessage({ type: 'error', text: 'Failed to update competition account.' })
     }
   }
 
@@ -442,15 +480,15 @@ export default function Accounts() {
                       )}
                     </div>
                     <button
-                      onClick={() => handleToggleLeaderboard(account)}
-                      className={`p-2 rounded-lg transition-colors ${
+                      onClick={() => handleSelectForCompetition(account)}
+                      className={`px-3 py-1.5 rounded-lg transition-colors text-sm font-medium ${
                         account.show_on_leaderboard
-                          ? 'text-green-400 hover:bg-green-500/20'
-                          : 'text-red-400 hover:bg-red-500/20'
+                          ? 'bg-green-500/20 text-green-400 border border-green-500/50'
+                          : 'bg-white/5 text-white/50 border border-white/10 hover:border-white/30'
                       }`}
-                      title={account.show_on_leaderboard ? 'Hide from leaderboard' : 'Show on leaderboard'}
+                      title={account.show_on_leaderboard ? 'This is your competition account' : 'Select for competition'}
                     >
-                      {account.show_on_leaderboard ? <Eye size={18} /> : <EyeOff size={18} />}
+                      {account.show_on_leaderboard ? '✓ In Competition' : 'Select'}
                     </button>
                     <button
                       onClick={() => handleDeleteAccount(account.id)}
