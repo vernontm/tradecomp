@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS public.trading_accounts (
     account_type TEXT NOT NULL CHECK (account_type IN ('tradelocker')),
     tl_email TEXT,
     tl_server TEXT,
+    tl_password_encrypted TEXT,
     account_number TEXT NOT NULL,
     account_name TEXT,
     starting_balance DECIMAL(15, 2) DEFAULT 0,

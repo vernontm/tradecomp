@@ -23,6 +23,7 @@ export interface TradingAccount {
   account_type: 'tradelocker'
   tl_email: string
   tl_server: string
+  tl_password_encrypted?: string
   account_number: string
   account_name?: string
   starting_balance: number
