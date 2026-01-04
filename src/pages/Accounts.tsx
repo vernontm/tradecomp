@@ -2,7 +2,7 @@ import { useState, FormEvent, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, TradingAccount } from '../lib/supabase'
 import { tradeLockerAPI, TradeLockerAccountInfo } from '../lib/tradelocker'
-import { Wallet, AlertCircle, CheckCircle, ArrowLeft, Trash2 } from 'lucide-react'
+import { Wallet, AlertCircle, CheckCircle, ArrowLeft, Trash2, Eye, EyeOff } from 'lucide-react'
 
 export default function Accounts() {
   const { user } = useAuth()
@@ -92,11 +92,11 @@ export default function Accounts() {
 
       for (const account of accountsToAdd) {
         const existingAccount = existingAccounts.find(
-          ea => ea.account_number === account.accountId
+          ea => ea.account_number === (account.accNum || account.accountId)
         )
 
         if (existingAccount) {
-          await supabase
+          const { error: updateError } = await supabase
             .from('trading_accounts')
             .update({
               tl_email: formData.email,
@@ -106,21 +106,32 @@ export default function Accounts() {
               last_updated: new Date().toISOString(),
             })
             .eq('id', existingAccount.id)
+          
+          if (updateError) {
+            console.error('Update error:', updateError)
+            throw updateError
+          }
         } else {
-          await supabase
+          const { error: insertError } = await supabase
             .from('trading_accounts')
             .insert({
               user_id: user?.id,
               account_type: 'tradelocker',
               tl_email: formData.email,
               tl_server: formData.server,
-              account_number: account.accountId,
+              account_number: account.accNum || account.accountId,
               account_name: account.name,
               starting_balance: account.balance,
               current_balance: account.balance,
               currency: account.currency,
               is_active: true,
+              show_on_leaderboard: true,
             })
+          
+          if (insertError) {
+            console.error('Insert error:', insertError)
+            throw insertError
+          }
         }
       }
 
@@ -167,6 +178,40 @@ export default function Accounts() {
     }
   }
 
+  const handleToggleLeaderboard = async (account: TradingAccount) => {
+    const newValue = !account.show_on_leaderboard
+    
+    if (!newValue) {
+      const confirmed = confirm(
+        'Warning: Hiding this account from the leaderboard will disqualify it from the competition. Are you sure?'
+      )
+      if (!confirmed) return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('trading_accounts')
+        .update({ show_on_leaderboard: newValue })
+        .eq('id', account.id)
+
+      if (error) throw error
+
+      setExistingAccounts(prev =>
+        prev.map(acc =>
+          acc.id === account.id ? { ...acc, show_on_leaderboard: newValue } : acc
+        )
+      )
+      setMessage({
+        type: 'success',
+        text: newValue
+          ? 'Account is now visible on the leaderboard.'
+          : 'Account hidden from leaderboard and disqualified from competition.',
+      })
+    } catch (error: any) {
+      setMessage({ type: 'error', text: 'Failed to update leaderboard visibility.' })
+    }
+  }
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
@@ -207,25 +252,37 @@ export default function Accounts() {
             {existingAccounts.map((account) => (
               <div
                 key={account.id}
-                className="p-4 bg-white/5 border border-white/10 rounded-xl"
+                className={`p-4 border rounded-xl ${
+                  account.show_on_leaderboard 
+                    ? 'bg-white/5 border-white/10' 
+                    : 'bg-red-500/5 border-red-500/20'
+                }`}
               >
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-white">
-                        {account.account_name || `Account #${account.account_number}`}
+                        {account.account_name || 'TradeLocker Account'}
                       </span>
-                      {account.is_active && (
+                      {account.is_active && account.show_on_leaderboard && (
                         <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded">
                           Active
                         </span>
                       )}
+                      {!account.show_on_leaderboard && (
+                        <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded">
+                          Disqualified
+                        </span>
+                      )}
                     </div>
-                    <p className="text-sm text-white/50 mt-1">
+                    <p className="text-sm text-white/70 mt-1 font-mono">
+                      Account #: {account.account_number}
+                    </p>
+                    <p className="text-xs text-white/50 mt-1">
                       {account.tl_email} • {account.tl_server}
                     </p>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
                     <div className="text-right">
                       <p className="text-lg font-bold text-white">
                         {account.currency || 'USD'} {(account.current_balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -234,6 +291,17 @@ export default function Accounts() {
                         Started: {(account.starting_balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
+                    <button
+                      onClick={() => handleToggleLeaderboard(account)}
+                      className={`p-2 rounded-lg transition-colors ${
+                        account.show_on_leaderboard
+                          ? 'text-green-400 hover:bg-green-500/20'
+                          : 'text-red-400 hover:bg-red-500/20'
+                      }`}
+                      title={account.show_on_leaderboard ? 'Hide from leaderboard' : 'Show on leaderboard'}
+                    >
+                      {account.show_on_leaderboard ? <Eye size={18} /> : <EyeOff size={18} />}
+                    </button>
                     <button
                       onClick={() => handleDeleteAccount(account.id)}
                       className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
@@ -329,7 +397,7 @@ export default function Accounts() {
             {availableAccounts.map((account) => {
               const isSelected = selectedAccountIds.includes(account.accountId)
               const isAlreadyLinked = existingAccounts.some(
-                ea => ea.account_number === account.accountId
+                ea => ea.account_number === (account.accNum || account.accountId)
               )
               
               return (

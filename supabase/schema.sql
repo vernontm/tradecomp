@@ -18,12 +18,15 @@ CREATE TABLE IF NOT EXISTS public.trading_accounts (
     tl_email TEXT,
     tl_server TEXT,
     account_number TEXT NOT NULL,
+    account_name TEXT,
     starting_balance DECIMAL(15, 2) DEFAULT 0,
     current_balance DECIMAL(15, 2) DEFAULT 0,
+    currency TEXT DEFAULT 'USD',
     is_active BOOLEAN DEFAULT TRUE,
+    show_on_leaderboard BOOLEAN DEFAULT TRUE,
     last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(user_id)
+    UNIQUE(user_id, account_number)
 );
 
 -- Competition settings table
@@ -48,9 +51,12 @@ SELECT
     u.username,
     ta.id,
     ta.account_number,
+    ta.account_name,
     ta.starting_balance,
     ta.current_balance,
+    ta.currency,
     ta.is_active,
+    ta.show_on_leaderboard,
     ta.last_updated,
     (ta.current_balance - ta.starting_balance) as profit,
     CASE 
@@ -60,7 +66,7 @@ SELECT
     END as percentage_change
 FROM public.trading_accounts ta
 JOIN public.users u ON ta.user_id = u.id
-WHERE ta.starting_balance >= 100
+WHERE ta.starting_balance >= 100 AND ta.show_on_leaderboard = TRUE
 ORDER BY percentage_change DESC;
 
 -- Enable Row Level Security

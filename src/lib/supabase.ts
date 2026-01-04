@@ -29,6 +29,7 @@ export interface TradingAccount {
   current_balance: number
   currency?: string
   is_active: boolean
+  show_on_leaderboard: boolean
   last_updated: string
   created_at: string
 }
