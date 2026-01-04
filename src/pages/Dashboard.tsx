@@ -97,7 +97,7 @@ export default function Dashboard() {
 
       {/* Account Switcher */}
       {accounts.length > 1 && (
-        <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4">
+        <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4 relative" style={{ zIndex: 100 }}>
           <div className="flex items-center justify-between">
             <span className="text-sm text-white/50 uppercase tracking-wider">Select Account</span>
             <div className="relative">
@@ -111,7 +111,10 @@ export default function Dashboard() {
                 <ChevronDown size={16} className={`transition-transform ${showAccountDropdown ? 'rotate-180' : ''}`} />
               </button>
               {showAccountDropdown && (
-                <div className="absolute right-0 mt-2 w-64 bg-sidebar border border-white/10 rounded-xl shadow-xl z-50">
+                <div 
+                  className="absolute right-0 mt-2 w-64 bg-sidebar border border-white/10 rounded-xl shadow-2xl"
+                  style={{ zIndex: 9999 }}
+                >
                   {accounts.map((acc) => (
                     <button
                       key={acc.id}
