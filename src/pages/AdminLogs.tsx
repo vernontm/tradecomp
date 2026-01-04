@@ -193,7 +193,7 @@ export default function AdminLogs() {
       )}
 
       <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
           <table className="w-full">
             <thead className="bg-white/5 border-b border-white/10">
               <tr>

@@ -277,9 +277,9 @@ export default function Admin() {
           Participant Accounts ({accounts.length})
         </h3>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
           <table className="w-full">
-            <thead className="bg-white/5 border-b border-white/10">
+            <thead className="bg-white/5 border-b border-white/10 sticky top-0">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white/70">User</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white/70">Email</th>

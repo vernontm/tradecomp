@@ -126,9 +126,9 @@ export default function Leaderboard() {
       </div>
 
       <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
           <table className="w-full">
-            <thead className="bg-white/5 border-b border-white/10">
+            <thead className="bg-white/5 border-b border-white/10 sticky top-0">
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-white/70 uppercase tracking-wider">
                   Rank
