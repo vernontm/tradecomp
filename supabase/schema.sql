@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS public.trading_accounts (
     currency TEXT DEFAULT 'USD',
     is_active BOOLEAN DEFAULT TRUE,
     show_on_leaderboard BOOLEAN DEFAULT TRUE,
+    balance_override BOOLEAN DEFAULT FALSE,
     last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(user_id, account_number)

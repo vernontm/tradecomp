@@ -133,8 +133,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           continue;
         }
 
-        // Update each account's balance
+        // Update each account's balance (skip if balance_override is true)
         for (const dbAccount of groupAccounts) {
+          // Skip accounts with admin override
+          if (dbAccount.balance_override) {
+            continue;
+          }
+
           const tlAccount = (accountsData.accounts || []).find(
             (a: any) => a.accNum?.toString() === dbAccount.account_number || a.id?.toString() === dbAccount.account_number
           );

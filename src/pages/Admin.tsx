@@ -1,7 +1,7 @@
 import { useEffect, useState, FormEvent } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, TradingAccount, CompetitionSettings } from '../lib/supabase'
-import { Shield, Calendar, Users, Pencil, Check, X, Activity } from 'lucide-react'
+import { Shield, Calendar, Users, Pencil, Check, X, Activity, Lock, Unlock } from 'lucide-react'
 import { Navigate, Link } from 'react-router-dom'
 
 interface AccountWithUser extends TradingAccount {
@@ -149,6 +149,32 @@ export default function Admin() {
     }
   }
 
+  const toggleBalanceOverride = async (account: AccountWithUser) => {
+    const newValue = !account.balance_override
+    try {
+      const { error } = await supabase
+        .from('trading_accounts')
+        .update({ balance_override: newValue })
+        .eq('id', account.id)
+
+      if (error) throw error
+
+      setAccounts(prev =>
+        prev.map(acc =>
+          acc.id === account.id ? { ...acc, balance_override: newValue } : acc
+        )
+      )
+      setMessage({
+        type: 'success',
+        text: newValue 
+          ? 'Balance locked - cron job will not update this account.' 
+          : 'Balance unlocked - cron job will update this account.',
+      })
+    } catch (error: any) {
+      setMessage({ type: 'error', text: 'Failed to toggle override.' })
+    }
+  }
+
   if (!user?.is_admin) {
     return <Navigate to="/dashboard" replace />
   }
@@ -261,13 +287,14 @@ export default function Admin() {
                 <th className="px-4 py-3 text-right text-sm font-semibold text-white/70">Starting</th>
                 <th className="px-4 py-3 text-right text-sm font-semibold text-white/70">Current</th>
                 <th className="px-4 py-3 text-center text-sm font-semibold text-white/70">Status</th>
+                <th className="px-4 py-3 text-center text-sm font-semibold text-white/70">Override</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-white/70">Last Updated</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
               {accounts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-white/50">
+                  <td colSpan={8} className="px-4 py-8 text-center text-white/50">
                     No accounts registered yet
                   </td>
                 </tr>
@@ -353,6 +380,19 @@ export default function Admin() {
                       >
                         {account.is_active ? 'Active' : 'Inactive'}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap text-center">
+                      <button
+                        onClick={() => toggleBalanceOverride(account)}
+                        className={`p-2 rounded-lg transition-colors ${
+                          account.balance_override
+                            ? 'text-yellow-400 bg-yellow-500/20 hover:bg-yellow-500/30'
+                            : 'text-white/50 hover:bg-white/10'
+                        }`}
+                        title={account.balance_override ? 'Balance locked (click to unlock)' : 'Balance auto-updates (click to lock)'}
+                      >
+                        {account.balance_override ? <Lock size={16} /> : <Unlock size={16} />}
+                      </button>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-white/70">
                       {new Date(account.last_updated).toLocaleDateString()}

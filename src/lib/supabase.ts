@@ -31,6 +31,7 @@ export interface TradingAccount {
   currency?: string
   is_active: boolean
   show_on_leaderboard: boolean
+  balance_override: boolean
   last_updated: string
   created_at: string
 }
