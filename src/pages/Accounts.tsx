@@ -1,13 +1,16 @@
 import { useState, FormEvent, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, TradingAccount } from '../lib/supabase'
-import { tradeLockerAPI } from '../lib/tradelocker'
-import { Wallet, AlertCircle, CheckCircle } from 'lucide-react'
+import { tradeLockerAPI, TradeLockerAccountInfo } from '../lib/tradelocker'
+import { Wallet, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react'
 
 export default function Accounts() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(false)
-  const [existingAccount, setExistingAccount] = useState<TradingAccount | null>(null)
+  const [existingAccounts, setExistingAccounts] = useState<TradingAccount[]>([])
+  const [availableAccounts, setAvailableAccounts] = useState<TradeLockerAccountInfo[]>([])
+  const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>([])
+  const [step, setStep] = useState<'credentials' | 'select'>('credentials')
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
   const [formData, setFormData] = useState({
@@ -17,10 +20,10 @@ export default function Accounts() {
   })
 
   useEffect(() => {
-    fetchExistingAccount()
+    fetchExistingAccounts()
   }, [user])
 
-  const fetchExistingAccount = async () => {
+  const fetchExistingAccounts = async () => {
     if (!user) return
 
     try {
@@ -28,74 +31,102 @@ export default function Accounts() {
         .from('trading_accounts')
         .select('*')
         .eq('user_id', user.id)
-        .single()
 
-      if (error && error.code !== 'PGRST116') {
-        throw error
-      }
-
-      setExistingAccount(data)
+      if (error) throw error
+      setExistingAccounts(data || [])
     } catch (error) {
-      console.error('Error fetching account:', error)
+      console.error('Error fetching accounts:', error)
     }
   }
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleFetchAccounts = async (e: FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setMessage(null)
 
     try {
-      const isValid = await tradeLockerAPI.validateCredentials({
+      const accounts = await tradeLockerAPI.validateAndGetAccounts({
         email: formData.email,
         password: formData.password,
         server: formData.server,
         isDemo: false,
       })
 
-      if (!isValid) {
-        throw new Error('Invalid TradeLocker credentials. Please check your information.')
+      if (accounts.length === 0) {
+        throw new Error('No accounts found for these credentials.')
       }
 
-      const accountInfo = await tradeLockerAPI.getAccountInfo()
+      setAvailableAccounts(accounts)
+      setStep('select')
+    } catch (error: any) {
+      setMessage({
+        type: 'error',
+        text: error.message || 'Failed to fetch accounts. Please check your credentials.',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
-      if (existingAccount) {
-        const { error } = await supabase
-          .from('trading_accounts')
-          .update({
-            tl_email: formData.email,
-            tl_server: formData.server,
-            account_number: accountInfo.accountId,
-            starting_balance: accountInfo.balance,
-            current_balance: accountInfo.balance,
-            is_active: true,
-            last_updated: new Date().toISOString(),
-          })
-          .eq('id', existingAccount.id)
+  const toggleAccountSelection = (accountId: string) => {
+    setSelectedAccountIds(prev => 
+      prev.includes(accountId) 
+        ? prev.filter(id => id !== accountId)
+        : [...prev, accountId]
+    )
+  }
 
-        if (error) throw error
-      } else {
-        const { error } = await supabase
-          .from('trading_accounts')
-          .insert([
-            {
+  const handleAddSelectedAccounts = async () => {
+    if (selectedAccountIds.length === 0) {
+      setMessage({ type: 'error', text: 'Please select at least one account.' })
+      return
+    }
+
+    setLoading(true)
+    setMessage(null)
+
+    try {
+      const accountsToAdd = availableAccounts.filter(acc => 
+        selectedAccountIds.includes(acc.accountId)
+      )
+
+      for (const account of accountsToAdd) {
+        const existingAccount = existingAccounts.find(
+          ea => ea.account_number === account.accountId
+        )
+
+        if (existingAccount) {
+          await supabase
+            .from('trading_accounts')
+            .update({
+              tl_email: formData.email,
+              tl_server: formData.server,
+              current_balance: account.balance,
+              is_active: true,
+              last_updated: new Date().toISOString(),
+            })
+            .eq('id', existingAccount.id)
+        } else {
+          await supabase
+            .from('trading_accounts')
+            .insert({
               user_id: user?.id,
               account_type: 'tradelocker',
               tl_email: formData.email,
               tl_server: formData.server,
-              account_number: accountInfo.accountId,
-              starting_balance: accountInfo.balance,
-              current_balance: accountInfo.balance,
+              account_number: account.accountId,
+              account_name: account.name,
+              starting_balance: account.balance,
+              current_balance: account.balance,
+              currency: account.currency,
               is_active: true,
-            },
-          ])
-
-        if (error) throw error
+            })
+        }
       }
 
       setMessage({
         type: 'success',
-        text: 'Trading account connected successfully!',
+        text: `Successfully connected ${accountsToAdd.length} account(s)!`,
       })
 
       setTimeout(() => {
@@ -104,11 +135,18 @@ export default function Accounts() {
     } catch (error: any) {
       setMessage({
         type: 'error',
-        text: error.message || 'Failed to connect account. Please try again.',
+        text: error.message || 'Failed to add accounts. Please try again.',
       })
     } finally {
       setLoading(false)
     }
+  }
+
+  const goBackToCredentials = () => {
+    setStep('credentials')
+    setAvailableAccounts([])
+    setSelectedAccountIds([])
+    setMessage(null)
   }
 
   return (
@@ -140,65 +178,149 @@ export default function Accounts() {
         </div>
       )}
 
-      <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
-        <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
-          <Wallet size={20} className="text-primary" />
-          Account Credentials
-        </h3>
+      {step === 'credentials' ? (
+        <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
+          <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+            <Wallet size={20} className="text-primary" />
+            Account Credentials
+          </h3>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-2 uppercase tracking-wider">
-              Email Address
-            </label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-all"
-              placeholder="Enter your TradeLocker email"
-              required
-            />
+          <form onSubmit={handleFetchAccounts} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-white/70 mb-2 uppercase tracking-wider">
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-all"
+                placeholder="Enter your TradeLocker email"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-white/70 mb-2 uppercase tracking-wider">
+                Password
+              </label>
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-all"
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-white/70 mb-2 uppercase tracking-wider">
+                Server
+              </label>
+              <input
+                type="text"
+                value={formData.server}
+                onChange={(e) => setFormData({ ...formData, server: e.target.value })}
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-all"
+                placeholder="Enter your TradeLocker server"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 gradient-primary text-white font-medium rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <Wallet size={20} />
+              {loading ? 'Fetching Accounts...' : 'Fetch Accounts'}
+            </button>
+          </form>
+        </div>
+      ) : (
+        <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Wallet size={20} className="text-primary" />
+              Select Accounts to Add
+            </h3>
+            <button
+              onClick={goBackToCredentials}
+              className="text-white/70 hover:text-white flex items-center gap-1 text-sm"
+            >
+              <ArrowLeft size={16} />
+              Back
+            </button>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-2 uppercase tracking-wider">
-              Password
-            </label>
-            <input
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-all"
-              placeholder="Enter your password"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-2 uppercase tracking-wider">
-              Server
-            </label>
-            <input
-              type="text"
-              value={formData.server}
-              onChange={(e) => setFormData({ ...formData, server: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-all"
-              placeholder="Enter your TradeLocker server"
-              required
-            />
+          <div className="space-y-3 mb-6">
+            {availableAccounts.map((account) => {
+              const isSelected = selectedAccountIds.includes(account.accountId)
+              const isAlreadyLinked = existingAccounts.some(
+                ea => ea.account_number === account.accountId
+              )
+              
+              return (
+                <div
+                  key={account.accountId}
+                  onClick={() => toggleAccountSelection(account.accountId)}
+                  className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                    isSelected
+                      ? 'bg-primary/20 border-primary'
+                      : 'bg-white/5 border-white/10 hover:border-white/30'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-white">{account.name}</span>
+                        {isAlreadyLinked && (
+                          <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded">
+                            Already Linked
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-white/50 mt-1">
+                        Account #{account.accNum || account.accountId}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-white">
+                        {account.currency} {account.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                      <p className="text-sm text-white/50">Balance</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <p className="text-white/50">Equity</p>
+                      <p className="text-white">{account.equity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    </div>
+                    <div>
+                      <p className="text-white/50">Margin</p>
+                      <p className="text-white">{account.margin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    </div>
+                    <div>
+                      <p className="text-white/50">Free Margin</p>
+                      <p className="text-white">{account.freeMargin.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
 
           <button
-            type="submit"
-            disabled={loading}
+            onClick={handleAddSelectedAccounts}
+            disabled={loading || selectedAccountIds.length === 0}
             className="w-full py-3 gradient-primary text-white font-medium rounded-lg hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            <Wallet size={20} />
-            {loading ? 'Connecting...' : existingAccount ? 'Update Account' : 'Connect to TradeLocker'}
+            <CheckCircle size={20} />
+            {loading ? 'Adding Accounts...' : `Add ${selectedAccountIds.length} Selected Account(s)`}
           </button>
-        </form>
-      </div>
+        </div>
+      )}
 
       <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
         <h3 className="text-lg font-semibold mb-4">How to Enter Trading Competition</h3>

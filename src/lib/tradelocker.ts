@@ -16,6 +16,8 @@ export interface TradeLockerCredentials {
 
 export interface TradeLockerAccountInfo {
   accountId: string
+  accNum: string
+  name: string
   balance: number
   equity: number
   margin: number
@@ -77,7 +79,7 @@ export class TradeLockerAPI {
     }
   }
 
-  async getAccountInfo(): Promise<TradeLockerAccountInfo> {
+  async getAllAccounts(): Promise<TradeLockerAccountInfo[]> {
     if (!this.accessToken) {
       throw new Error('Not authenticated')
     }
@@ -92,6 +94,7 @@ export class TradeLockerAPI {
         : { headers: this.getHeaders(true) }
 
       const response = await axios.get(url, config)
+      console.log('TradeLocker accounts response:', response.data)
 
       const accounts = response.data.accounts || []
       
@@ -99,21 +102,31 @@ export class TradeLockerAPI {
         throw new Error('No accounts found')
       }
 
-      const account = accounts[0]
-
-      return {
-        accountId: account.id,
+      return accounts.map((account: any) => ({
+        accountId: account.id?.toString() || account.accountId?.toString() || '',
+        accNum: account.accNum?.toString() || account.accountNumber?.toString() || '',
+        name: account.name || account.accountName || `Account ${account.accNum || account.id}`,
         balance: account.balance || 0,
         equity: account.equity || 0,
         margin: account.margin || 0,
         freeMargin: account.freeMargin || 0,
         profit: account.profit || 0,
         currency: account.currency || 'USD'
-      }
+      }))
     } catch (error) {
-      console.error('Failed to get account info:', error)
+      console.error('Failed to get accounts:', error)
       throw new Error('Failed to retrieve account information')
     }
+  }
+
+  async getAccountInfo(): Promise<TradeLockerAccountInfo> {
+    const accounts = await this.getAllAccounts()
+    return accounts[0]
+  }
+
+  async validateAndGetAccounts(credentials: TradeLockerCredentials): Promise<TradeLockerAccountInfo[]> {
+    await this.authenticate(credentials)
+    return await this.getAllAccounts()
   }
 
   async validateCredentials(credentials: TradeLockerCredentials): Promise<boolean> {
