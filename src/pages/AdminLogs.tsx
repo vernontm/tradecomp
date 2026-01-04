@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
-import { Activity, CheckCircle, XCircle, Clock, RefreshCw } from 'lucide-react'
+import { Activity, CheckCircle, XCircle, Clock, RefreshCw, Play } from 'lucide-react'
 
 interface CronLog {
   id: string
@@ -19,6 +19,8 @@ export default function AdminLogs() {
   const [logs, setLogs] = useState<CronLog[]>([])
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [triggering, setTriggering] = useState(false)
+  const [triggerMessage, setTriggerMessage] = useState<string | null>(null)
 
   useEffect(() => {
     checkAdminAndFetchLogs()
@@ -62,6 +64,32 @@ export default function AdminLogs() {
       setLogs(data || [])
     } catch (error) {
       console.error('Error fetching logs:', error)
+    }
+  }
+
+  const triggerManualRefresh = async () => {
+    setTriggering(true)
+    setTriggerMessage(null)
+    try {
+      const response = await fetch('/api/refresh-balances', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-key': import.meta.env.VITE_ADMIN_API_KEY || ''
+        }
+      })
+      const data = await response.json()
+      
+      if (response.ok) {
+        setTriggerMessage(`Success: Updated ${data.updated}/${data.total} accounts`)
+        await fetchLogs()
+      } else {
+        setTriggerMessage(`Error: ${data.error || 'Failed to trigger refresh'}`)
+      }
+    } catch (error: any) {
+      setTriggerMessage(`Error: ${error.message}`)
+    } finally {
+      setTriggering(false)
     }
   }
 
@@ -134,15 +162,35 @@ export default function AdminLogs() {
               View balance refresh job history and status.
             </p>
           </div>
-          <button
-            onClick={fetchLogs}
-            className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors"
-          >
-            <RefreshCw size={16} />
-            Refresh
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={triggerManualRefresh}
+              disabled={triggering}
+              className="flex items-center gap-2 px-4 py-2 gradient-primary text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50"
+            >
+              <Play size={16} className={triggering ? 'animate-pulse' : ''} />
+              {triggering ? 'Running...' : 'Trigger Refresh'}
+            </button>
+            <button
+              onClick={fetchLogs}
+              className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors"
+            >
+              <RefreshCw size={16} />
+              Refresh
+            </button>
+          </div>
         </div>
       </div>
+
+      {triggerMessage && (
+        <div className={`p-4 rounded-xl border ${
+          triggerMessage.startsWith('Success') 
+            ? 'bg-green-500/10 border-green-500 text-green-500'
+            : 'bg-red-500/10 border-red-500 text-red-500'
+        }`}>
+          {triggerMessage}
+        </div>
+      )}
 
       <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
