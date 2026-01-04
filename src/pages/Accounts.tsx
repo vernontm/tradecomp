@@ -97,7 +97,7 @@ export default function Accounts() {
 
       for (const account of accountsToAdd) {
         const existingAccount = existingAccounts.find(
-          ea => ea.account_number === (account.accNum || account.accountId)
+          ea => ea.account_number === account.accountId
         )
 
         if (existingAccount) {
@@ -125,7 +125,7 @@ export default function Accounts() {
               tl_email: formData.email,
               tl_server: formData.server,
               tl_password_encrypted: encryptPassword(formData.password),
-              account_number: account.accNum || account.accountId,
+              account_number: account.accountId,
               account_name: account.name,
               starting_balance: account.balance,
               current_balance: account.balance,
@@ -547,7 +547,7 @@ export default function Accounts() {
             {availableAccounts.map((account) => {
               const isSelected = selectedAccountIds.includes(account.accountId)
               const isAlreadyLinked = existingAccounts.some(
-                ea => ea.account_number === (account.accNum || account.accountId)
+                ea => ea.account_number === account.accountId
               )
               
               return (

@@ -136,6 +136,9 @@ export default function Leaderboard() {
                 <th className="px-6 py-4 text-left text-sm font-semibold text-white/70 uppercase tracking-wider">
                   Trader
                 </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-white/70 uppercase tracking-wider">
+                  Account #
+                </th>
                 <th className="px-6 py-4 text-right text-sm font-semibold text-white/70 uppercase tracking-wider">
                   Starting Balance
                 </th>
@@ -156,7 +159,7 @@ export default function Leaderboard() {
             <tbody className="divide-y divide-white/10">
               {leaderboard.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-white/50">
+                  <td colSpan={8} className="px-6 py-12 text-center text-white/50">
                     No participants yet. Be the first to join!
                   </td>
                 </tr>
@@ -180,6 +183,9 @@ export default function Leaderboard() {
                           </div>
                           <span className="font-medium">{entry.username}</span>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-white/70 font-mono text-sm">
+                        {entry.account_id}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         ${entry.starting_balance.toFixed(2)}
