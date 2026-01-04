@@ -2,7 +2,7 @@ import { useState, FormEvent, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, TradingAccount } from '../lib/supabase'
 import { tradeLockerAPI, TradeLockerAccountInfo } from '../lib/tradelocker'
-import { Wallet, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react'
+import { Wallet, AlertCircle, CheckCircle, ArrowLeft, Trash2 } from 'lucide-react'
 
 export default function Accounts() {
   const { user } = useAuth()
@@ -149,6 +149,24 @@ export default function Accounts() {
     setMessage(null)
   }
 
+  const handleDeleteAccount = async (accountId: string) => {
+    if (!confirm('Are you sure you want to remove this account?')) return
+
+    try {
+      const { error } = await supabase
+        .from('trading_accounts')
+        .delete()
+        .eq('id', accountId)
+
+      if (error) throw error
+
+      setExistingAccounts(prev => prev.filter(acc => acc.id !== accountId))
+      setMessage({ type: 'success', text: 'Account removed successfully.' })
+    } catch (error: any) {
+      setMessage({ type: 'error', text: 'Failed to remove account.' })
+    }
+  }
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
@@ -175,6 +193,59 @@ export default function Accounts() {
             <AlertCircle size={20} />
           )}
           <span>{message.text}</span>
+        </div>
+      )}
+
+      {/* Linked Accounts Section */}
+      {existingAccounts.length > 0 && (
+        <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Wallet size={20} className="text-primary" />
+            Linked Accounts ({existingAccounts.length})
+          </h3>
+          <div className="space-y-3">
+            {existingAccounts.map((account) => (
+              <div
+                key={account.id}
+                className="p-4 bg-white/5 border border-white/10 rounded-xl"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-white">
+                        {account.account_name || `Account #${account.account_number}`}
+                      </span>
+                      {account.is_active && (
+                        <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded">
+                          Active
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-white/50 mt-1">
+                      {account.tl_email} • {account.tl_server}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-white">
+                        {account.currency || 'USD'} {(account.current_balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                      <p className="text-xs text-white/50">
+                        Started: {(account.starting_balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteAccount(account.id)}
+                      className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                      title="Remove account"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

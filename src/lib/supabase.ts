@@ -24,8 +24,10 @@ export interface TradingAccount {
   tl_email: string
   tl_server: string
   account_number: string
+  account_name?: string
   starting_balance: number
   current_balance: number
+  currency?: string
   is_active: boolean
   last_updated: string
   created_at: string
