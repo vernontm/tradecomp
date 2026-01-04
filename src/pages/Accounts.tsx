@@ -391,6 +391,9 @@ export default function Accounts() {
                     <p className="text-xs text-white/50 mt-1">
                       {account.tl_email} • {account.tl_server}
                     </p>
+                    <p className="text-xs text-white/40 mt-1">
+                      Last updated: {new Date(account.last_updated).toLocaleString()}
+                    </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
