@@ -141,7 +141,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
 
           const tlAccount = (accountsData.accounts || []).find(
-            (a: any) => a.id?.toString() === dbAccount.account_number
+            (a: any) => 
+              a.id?.toString() === dbAccount.account_number || 
+              a.accNum?.toString() === dbAccount.account_number
           );
 
           if (tlAccount) {
