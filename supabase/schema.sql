@@ -10,6 +10,18 @@ CREATE TABLE IF NOT EXISTS public.users (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Cron job logs table
+CREATE TABLE IF NOT EXISTS public.cron_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    job_name TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('started', 'completed', 'failed')),
+    accounts_updated INTEGER DEFAULT 0,
+    accounts_total INTEGER DEFAULT 0,
+    errors TEXT[],
+    details JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Trading accounts table
 CREATE TABLE IF NOT EXISTS public.trading_accounts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

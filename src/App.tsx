@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard'
 import Leaderboard from './pages/Leaderboard'
 import Accounts from './pages/Accounts'
 import Admin from './pages/Admin'
+import AdminLogs from './pages/AdminLogs'
 import Layout from './components/Layout'
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/accounts" element={<Accounts />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/logs" element={<AdminLogs />} />
           </Route>
           
           <Route path="/" element={<Navigate to="/getting-started" replace />} />

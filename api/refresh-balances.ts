@@ -48,6 +48,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+  // Log job start
+  const { data: logEntry } = await supabase
+    .from('cron_logs')
+    .insert({
+      job_name: 'refresh-balances',
+      status: 'started',
+      details: { triggered_by: isVercelCron ? 'cron' : 'admin' }
+    })
+    .select()
+    .single();
+
   try {
     // Fetch all active trading accounts with stored credentials
     const { data: accounts, error: fetchError } = await supabase
@@ -148,6 +159,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
+    // Log job completion
+    if (logEntry?.id) {
+      await supabase
+        .from('cron_logs')
+        .update({
+          status: 'completed',
+          accounts_updated: updatedCount,
+          accounts_total: accounts.length,
+          errors: errors.length > 0 ? errors : null,
+          details: { triggered_by: isVercelCron ? 'cron' : 'admin', duration_ms: Date.now() - new Date(logEntry.created_at).getTime() }
+        })
+        .eq('id', logEntry.id);
+    }
+
     return res.status(200).json({
       message: 'Balance refresh completed',
       updated: updatedCount,
@@ -156,6 +181,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error: any) {
     console.error('Refresh balances error:', error);
+    
+    // Log job failure
+    if (logEntry?.id) {
+      await supabase
+        .from('cron_logs')
+        .update({
+          status: 'failed',
+          errors: [error.message],
+          details: { triggered_by: isVercelCron ? 'cron' : 'admin', error: error.message }
+        })
+        .eq('id', logEntry.id);
+    }
+
     return res.status(500).json({ error: 'Failed to refresh balances', details: error.message });
   }
 }
