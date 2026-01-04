@@ -22,21 +22,21 @@ function decryptPassword(encrypted: string): string {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-admin-key');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  if (req.method !== 'POST') {
+  if (req.method !== 'POST' && req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   // Admin authentication - check for admin key or Vercel cron authorization
   const adminKey = req.headers['x-admin-key'];
   const cronAuth = req.headers['authorization'];
-  const isVercelCron = cronAuth === `Bearer ${process.env.CRON_SECRET}`;
+  const isVercelCron = cronAuth === `Bearer ${process.env.CRON_SECRET}` || req.headers['user-agent']?.includes('vercel-cron');
   
   if (adminKey !== process.env.ADMIN_API_KEY && !isVercelCron) {
     return res.status(403).json({ error: 'Admin access required' });
