@@ -2,7 +2,7 @@ import { useState, FormEvent, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, TradingAccount } from '../lib/supabase'
 import { tradeLockerAPI, TradeLockerAccountInfo } from '../lib/tradelocker'
-import { Wallet, AlertCircle, CheckCircle, ArrowLeft, Trash2, Eye, EyeOff, Pencil, Check, X } from 'lucide-react'
+import { Wallet, AlertCircle, CheckCircle, ArrowLeft, Trash2, Eye, EyeOff, Pencil, Check, X, RefreshCw } from 'lucide-react'
 
 export default function Accounts() {
   const { user } = useAuth()
@@ -22,6 +22,9 @@ export default function Accounts() {
   const [nicknameValue, setNicknameValue] = useState('')
   const [editingBalance, setEditingBalance] = useState<string | null>(null)
   const [balanceValue, setBalanceValue] = useState('')
+  const [refreshing, setRefreshing] = useState(false)
+  const [showRefreshModal, setShowRefreshModal] = useState(false)
+  const [refreshPassword, setRefreshPassword] = useState('')
 
   useEffect(() => {
     fetchExistingAccounts()
@@ -284,6 +287,58 @@ export default function Accounts() {
     }
   }
 
+  const handleRefreshBalances = async () => {
+    if (!refreshPassword) {
+      setMessage({ type: 'error', text: 'Please enter your password.' })
+      return
+    }
+
+    // Get unique email/server combinations from existing accounts
+    const credentials = existingAccounts[0]
+    if (!credentials?.tl_email || !credentials?.tl_server) {
+      setMessage({ type: 'error', text: 'No account credentials found.' })
+      return
+    }
+
+    setRefreshing(true)
+    setMessage(null)
+
+    try {
+      const accounts = await tradeLockerAPI.validateAndGetAccounts({
+        email: credentials.tl_email,
+        password: refreshPassword,
+        server: credentials.tl_server,
+        isDemo: false,
+      })
+
+      // Update balances in database
+      for (const existingAcc of existingAccounts) {
+        const freshData = accounts.find(
+          a => a.accNum === existingAcc.account_number || a.accountId === existingAcc.account_number
+        )
+        if (freshData) {
+          await supabase
+            .from('trading_accounts')
+            .update({
+              current_balance: freshData.balance,
+              last_updated: new Date().toISOString(),
+            })
+            .eq('id', existingAcc.id)
+        }
+      }
+
+      // Refresh local state
+      await fetchExistingAccounts()
+      setShowRefreshModal(false)
+      setRefreshPassword('')
+      setMessage({ type: 'success', text: 'Balances updated successfully!' })
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message || 'Failed to refresh balances.' })
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
@@ -313,13 +368,68 @@ export default function Accounts() {
         </div>
       )}
 
+      {/* Refresh Modal */}
+      {showRefreshModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-sidebar border border-white/10 rounded-2xl p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">Refresh Account Balances</h3>
+            <p className="text-white/70 text-sm mb-4">
+              Enter your TradeLocker password to fetch the latest balances.
+            </p>
+            <input
+              type="password"
+              value={refreshPassword}
+              onChange={(e) => setRefreshPassword(e.target.value)}
+              placeholder="Enter your password"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-primary mb-4"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleRefreshBalances()
+                if (e.key === 'Escape') {
+                  setShowRefreshModal(false)
+                  setRefreshPassword('')
+                }
+              }}
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowRefreshModal(false)
+                  setRefreshPassword('')
+                }}
+                className="flex-1 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRefreshBalances}
+                disabled={refreshing}
+                className="flex-1 py-2 gradient-primary text-white rounded-lg hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+                {refreshing ? 'Refreshing...' : 'Refresh'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Linked Accounts Section */}
       {existingAccounts.length > 0 && (
         <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Wallet size={20} className="text-primary" />
-            Linked Accounts ({existingAccounts.length})
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Wallet size={20} className="text-primary" />
+              Linked Accounts ({existingAccounts.length})
+            </h3>
+            <button
+              onClick={() => setShowRefreshModal(true)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors text-sm"
+            >
+              <RefreshCw size={14} />
+              Refresh Balances
+            </button>
+          </div>
           <div className="space-y-3">
             {existingAccounts.map((account) => (
               <div
