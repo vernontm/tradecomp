@@ -1,0 +1,11 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/api/refresh-balances/route": "/api/refresh-balances",
+  "/api/tradelocker-accounts/route": "/api/tradelocker-accounts",
+  "/api/tradelocker-auth/route": "/api/tradelocker-auth",
+  "/dashboard/[companyId]/page": "/dashboard/[companyId]",
+  "/discover/page": "/discover",
+  "/experiences/[experienceId]/page": "/experiences/[experienceId]",
+  "/page": "/"
+}

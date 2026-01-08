@@ -1,0 +1,11 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/refresh-balances/route": "app/api/refresh-balances/route.js",
+  "/api/tradelocker-accounts/route": "app/api/tradelocker-accounts/route.js",
+  "/api/tradelocker-auth/route": "app/api/tradelocker-auth/route.js",
+  "/dashboard/[companyId]/page": "app/dashboard/[companyId]/page.js",
+  "/discover/page": "app/discover/page.js",
+  "/experiences/[experienceId]/page": "app/experiences/[experienceId]/page.js",
+  "/page": "app/page.js"
+}

@@ -1,160 +1,122 @@
-# Trading Competition Platform
+# Trading Competition - Whop App
 
-A modern trading competition platform built with React, Supabase, and TradeLocker API integration.
+A trading competition platform embedded in Whop that connects with TradeLocker accounts to track and rank traders based on their percentage gains.
 
-## Features
+## Whop Integration
 
-- 🔐 **Authentication**: Email/password and Google OAuth support
-- 📊 **Real-time Leaderboard**: Track competition rankings based on percentage gains
-- 💼 **TradeLocker Integration**: Connect trading accounts via TradeLocker API
-- 👥 **User Dashboard**: View personal trading statistics and competition status
-- 🛡️ **Admin Panel**: Manage competition settings and monitor participants
-- 📱 **Responsive Design**: Modern UI with Tailwind CSS and mobile support
+This app is designed to be embedded in Whop using the Whop SDK. It provides:
+- **Experience View** (`/experiences/[experienceId]`) - For customers to access the trading competition
+- **Dashboard View** (`/dashboard/[companyId]`) - For admins to manage the competition
+- **Discover View** (`/discover`) - Landing page for the app
 
-## Tech Stack
+## Setup Instructions
 
-- **Frontend**: React 18 + TypeScript + Vite
-- **Styling**: Tailwind CSS
-- **Backend**: Supabase (PostgreSQL + Auth)
-- **Trading API**: TradeLocker
-- **Deployment**: Vercel
-- **Icons**: Lucide React
+### 1. Create a Whop App
 
-## Prerequisites
+1. Go to the [Whop Developer Dashboard](https://whop.com/dashboard/developer)
+2. Create a new app or select an existing one
+3. In the **Hosting** section, configure:
+   - **Base URL**: Your deployment domain (e.g., `https://your-app.vercel.app`)
+   - **App path**: `/experiences/[experienceId]`
+   - **Dashboard path**: `/dashboard/[companyId]`
+   - **Discover path**: `/discover`
 
-- Node.js 18+ and npm
-- Supabase account
-- TradeLocker API credentials
-- Vercel account (for deployment)
+### 2. Environment Variables
 
-## Getting Started
-
-### 1. Clone the repository
+Copy `.env.example` to `.env.local` and fill in:
 
 ```bash
-git clone <repository-url>
-cd windsurf-project-4
+# From Whop Developer Dashboard
+NEXT_PUBLIC_WHOP_APP_ID=app_xxxxxxxx
+WHOP_API_KEY=your_whop_api_key
+WHOP_WEBHOOK_SECRET=your_webhook_secret
+
+# From Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# TradeLocker
+TRADELOCKER_API_KEY=your_tradelocker_api_key
 ```
 
-### 2. Install dependencies
+### 3. Install Dependencies
 
 ```bash
 npm install
+# or
+pnpm install
 ```
 
-### 3. Set up Supabase
-
-1. Create a new Supabase project at [supabase.com](https://supabase.com)
-2. Run the SQL schema from `supabase/schema.sql` in the Supabase SQL Editor
-3. Enable Google OAuth in Supabase Authentication settings (optional)
-4. Copy your Supabase URL and anon key
-
-### 4. Configure environment variables
-
-Create a `.env` file in the root directory:
-
-```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-VITE_TRADELOCKER_API_URL=https://api.tradelocker.com
-VITE_REFERRAL_LINK=https://plexytrade.com/?t=TBZp1B&term=register
-```
-
-### 5. Run the development server
+### 4. Run Development Server
 
 ```bash
 npm run dev
 ```
 
-The app will be available at `http://localhost:3000`
+The dev server uses the Whop proxy for local development. In the Whop iframe, click the settings icon and select "localhost" to test locally.
+
+### 5. Deploy to Vercel
+
+1. Push your code to GitHub
+2. Import to [Vercel](https://vercel.com/new)
+3. Add environment variables
+4. Update your Whop app's Base URL to your Vercel domain
+
+## Project Structure
+
+```
+├── app/
+│   ├── api/                    # API routes
+│   │   ├── tradelocker-auth/   # TradeLocker authentication
+│   │   ├── tradelocker-accounts/ # Fetch TradeLocker accounts
+│   │   └── refresh-balances/   # Refresh all balances (cron)
+│   ├── dashboard/[companyId]/  # Admin dashboard (Whop Dashboard View)
+│   ├── discover/               # App discovery page (Whop Discover View)
+│   ├── experiences/[experienceId]/ # Main app (Whop Experience View)
+│   ├── layout.tsx              # Root layout with WhopApp wrapper
+│   └── page.tsx                # Home page
+├── components/
+│   ├── pages/                  # Page components
+│   ├── AdminDashboard.tsx      # Admin dashboard component
+│   ├── Sidebar.tsx             # Navigation sidebar
+│   └── TradingApp.tsx          # Main trading app component
+└── lib/
+    ├── supabase.ts             # Supabase client
+    └── whop-sdk.ts             # Whop SDK configuration
+```
+
+## Features
+
+- **Leaderboard**: Rankings based on percentage gain
+- **Account Connection**: Connect TradeLocker accounts
+- **Auto-sync**: Balances updated every 15 minutes
+- **Admin Panel**: Manage users and accounts (Dashboard View)
+- **Whop Authentication**: Users authenticated via Whop
+- **Responsive Design**: Modern UI with Tailwind CSS
+
+## Tech Stack
+
+- **Framework**: Next.js 14 + TypeScript
+- **Styling**: Tailwind CSS
+- **Backend**: Supabase (PostgreSQL)
+- **Trading API**: TradeLocker
+- **Platform**: Whop SDK
+- **Deployment**: Vercel
+- **Icons**: Lucide React
 
 ## Database Schema
 
 ### Tables
 
-- **users**: User profiles with admin flags
+- **users**: User profiles (synced with Whop users)
 - **trading_accounts**: TradeLocker account credentials and balances
 - **competition_settings**: Competition dates and referral links
 
 ### Views
 
 - **leaderboard_view**: Calculated rankings with profit/loss percentages
-
-## Deployment
-
-### Deploy to Vercel
-
-1. Install Vercel CLI:
-```bash
-npm i -g vercel
-```
-
-2. Deploy:
-```bash
-vercel
-```
-
-3. Set environment variables in Vercel dashboard:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-   - `VITE_TRADELOCKER_API_URL`
-   - `VITE_REFERRAL_LINK`
-
-## Project Structure
-
-```
-src/
-├── components/          # Reusable UI components
-│   ├── Layout.tsx
-│   ├── Sidebar.tsx
-│   └── ProtectedRoute.tsx
-├── contexts/           # React contexts
-│   └── AuthContext.tsx
-├── lib/               # Utilities and API clients
-│   ├── supabase.ts
-│   └── tradelocker.ts
-├── pages/             # Page components
-│   ├── Login.tsx
-│   ├── Signup.tsx
-│   ├── Dashboard.tsx
-│   ├── Leaderboard.tsx
-│   ├── Accounts.tsx
-│   └── Admin.tsx
-├── App.tsx            # Main app component
-├── main.tsx          # Entry point
-└── index.css         # Global styles
-```
-
-## Features Overview
-
-### User Features
-
-- **Sign up/Login**: Create account with email or Google
-- **Connect Trading Account**: Link TradeLocker account with credentials
-- **View Dashboard**: See personal statistics and competition ranking
-- **Leaderboard**: View all participants ranked by percentage gain
-
-### Admin Features
-
-- **Competition Settings**: Set start/end dates and referral links
-- **Monitor Accounts**: View all participant accounts and balances
-- **Manage Users**: Track active/inactive accounts
-
-## TradeLocker Integration
-
-The app integrates with TradeLocker API to:
-- Authenticate user accounts
-- Fetch real-time account balances
-- Validate account credentials
-- Track trading performance
-
-## Security
-
-- Row Level Security (RLS) enabled on all tables
-- JWT-based authentication via Supabase
-- Secure password hashing
-- Protected API routes
-- HTTPS-only in production
 
 ## Competition Rules
 
@@ -165,10 +127,6 @@ The app integrates with TradeLocker API to:
 5. Trade during competition period
 6. Winner determined by highest percentage gain
 
-## Support
-
-For issues or questions, please open an issue in the repository.
-
 ## License
 
-MIT License - feel free to use this project for your own trading competitions!
+MIT License
