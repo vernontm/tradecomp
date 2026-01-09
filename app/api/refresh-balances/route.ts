@@ -85,7 +85,8 @@ export async function POST(request: NextRequest) {
     const { data: accounts, error } = await supabase
       .from("trading_accounts")
       .select("*")
-      .eq("is_active", true);
+      .eq("is_active", true)
+      .eq("balance_override", false);
 
     if (error) throw error;
 

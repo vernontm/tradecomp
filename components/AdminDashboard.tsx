@@ -10,6 +10,10 @@ import {
   FileText,
   AlertCircle,
   CheckCircle,
+  Edit3,
+  X,
+  Check,
+  Lock,
 } from "lucide-react";
 
 export interface WhopUser {
@@ -46,6 +50,8 @@ export default function AdminDashboard({
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [editingAccount, setEditingAccount] = useState<string | null>(null);
+  const [editBalance, setEditBalance] = useState<string>("");
 
   useEffect(() => {
     fetchUsers();
@@ -172,6 +178,87 @@ export default function AdminDashboard({
     }
   };
 
+  const startEditBalance = (account: TradingAccount) => {
+    setEditingAccount(account.id);
+    setEditBalance(account.current_balance.toString());
+  };
+
+  const cancelEditBalance = () => {
+    setEditingAccount(null);
+    setEditBalance("");
+  };
+
+  const saveBalanceOverride = async (accountId: string) => {
+    const newBalance = parseFloat(editBalance);
+    if (isNaN(newBalance)) {
+      setMessage({ type: "error", text: "Invalid balance value" });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("trading_accounts")
+        .update({
+          current_balance: newBalance,
+          balance_override: true,
+        })
+        .eq("id", accountId);
+
+      if (error) throw error;
+
+      setUsers((prev) =>
+        prev.map((user) => ({
+          ...user,
+          accounts: user.accounts.map((acc) =>
+            acc.id === accountId
+              ? { ...acc, current_balance: newBalance, balance_override: true }
+              : acc
+          ),
+        }))
+      );
+      setEditingAccount(null);
+      setEditBalance("");
+      setMessage({
+        type: "success",
+        text: "Balance overridden successfully. This account will be skipped during auto-refresh.",
+      });
+    } catch (error: any) {
+      setMessage({
+        type: "error",
+        text: "Failed to override balance",
+      });
+    }
+  };
+
+  const clearBalanceOverride = async (accountId: string) => {
+    try {
+      const { error } = await supabase
+        .from("trading_accounts")
+        .update({ balance_override: false })
+        .eq("id", accountId);
+
+      if (error) throw error;
+
+      setUsers((prev) =>
+        prev.map((user) => ({
+          ...user,
+          accounts: user.accounts.map((acc) =>
+            acc.id === accountId ? { ...acc, balance_override: false } : acc
+          ),
+        }))
+      );
+      setMessage({
+        type: "success",
+        text: "Override cleared. Balance will update on next refresh.",
+      });
+    } catch (error: any) {
+      setMessage({
+        type: "error",
+        text: "Failed to clear override",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-dark flex items-center justify-center">
@@ -283,80 +370,128 @@ export default function AdminDashboard({
                     User
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-white/70 uppercase tracking-wider">
-                    Accounts
+                    Account
                   </th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-white/70 uppercase tracking-wider">
-                    Total Balance
-                  </th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-white/70 uppercase tracking-wider">
-                    Admin
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-white/70 uppercase tracking-wider">
+                    Balance
                   </th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-white/70 uppercase tracking-wider">
-                    Actions
+                    Leaderboard
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/10">
-                {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-white/5">
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="font-medium">{user.username}</p>
-                        <p className="text-sm text-white/50">{user.email}</p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-white/70">
-                        {user.accounts.length} account(s)
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <span className="font-medium">
-                        $
-                        {user.accounts
-                          .reduce((sum, acc) => sum + acc.current_balance, 0)
-                          .toFixed(2)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => toggleUserAdmin(user.id, user.is_admin)}
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          user.is_admin
-                            ? "bg-primary/20 text-primary"
-                            : "bg-white/10 text-white/50"
-                        }`}
-                      >
-                        {user.is_admin ? "Admin" : "User"}
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      {user.accounts.map((acc) => (
-                        <button
-                          key={acc.id}
-                          onClick={() =>
-                            toggleAccountLeaderboard(
-                              acc.id,
+                {users.map((user) =>
+                  user.accounts.length === 0 ? (
+                    <tr key={user.id} className="hover:bg-white/5">
+                      <td className="px-6 py-4">
+                        <div>
+                          <p className="font-medium">{user.username}</p>
+                          <p className="text-sm text-white/50">{user.email}</p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-white/50" colSpan={3}>
+                        No accounts
+                      </td>
+                    </tr>
+                  ) : (
+                    user.accounts.map((acc, idx) => (
+                      <tr key={acc.id} className="hover:bg-white/5">
+                        {idx === 0 && (
+                          <td className="px-6 py-4" rowSpan={user.accounts.length}>
+                            <div>
+                              <p className="font-medium">{user.username}</p>
+                              <p className="text-sm text-white/50">{user.email}</p>
+                              <button
+                                onClick={() => toggleUserAdmin(user.id, user.is_admin)}
+                                className={`mt-2 px-3 py-1 rounded-full text-xs font-medium ${
+                                  user.is_admin
+                                    ? "bg-primary/20 text-primary"
+                                    : "bg-white/10 text-white/50"
+                                }`}
+                              >
+                                {user.is_admin ? "Admin" : "User"}
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <span className="text-white/70">#{acc.account_number.slice(-4)}</span>
+                            {acc.balance_override && (
+                              <span className="flex items-center gap-1 text-xs text-yellow-400" title="Balance manually overridden">
+                                <Lock size={12} />
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          {editingAccount === acc.id ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                value={editBalance}
+                                onChange={(e) => setEditBalance(e.target.value)}
+                                className="w-28 px-2 py-1 bg-white/10 border border-white/20 rounded text-sm text-right"
+                                autoFocus
+                              />
+                              <button
+                                onClick={() => saveBalanceOverride(acc.id)}
+                                className="p-1 text-green-400 hover:bg-green-500/20 rounded"
+                                title="Save override"
+                              >
+                                <Check size={16} />
+                              </button>
+                              <button
+                                onClick={cancelEditBalance}
+                                className="p-1 text-red-400 hover:bg-red-500/20 rounded"
+                                title="Cancel"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span className={`font-medium ${acc.balance_override ? "text-yellow-400" : ""}`}>
+                                ${acc.current_balance.toFixed(2)}
+                              </span>
+                              <button
+                                onClick={() => startEditBalance(acc)}
+                                className="p-1 text-white/50 hover:text-white hover:bg-white/10 rounded"
+                                title="Override balance"
+                              >
+                                <Edit3 size={14} />
+                              </button>
+                              {acc.balance_override && (
+                                <button
+                                  onClick={() => clearBalanceOverride(acc.id)}
+                                  className="p-1 text-yellow-400 hover:bg-yellow-500/20 rounded"
+                                  title="Clear override"
+                                >
+                                  <X size={14} />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <button
+                            onClick={() =>
+                              toggleAccountLeaderboard(acc.id, acc.show_on_leaderboard)
+                            }
+                            className={`text-xs px-2 py-1 rounded ${
                               acc.show_on_leaderboard
-                            )
-                          }
-                          className={`text-xs px-2 py-1 rounded mr-1 ${
-                            acc.show_on_leaderboard
-                              ? "bg-green-500/20 text-green-400"
-                              : "bg-red-500/20 text-red-400"
-                          }`}
-                          title={`${acc.account_number}: ${
-                            acc.show_on_leaderboard
-                              ? "On Leaderboard"
-                              : "Hidden"
-                          }`}
-                        >
-                          #{acc.account_number.slice(-4)}
-                        </button>
-                      ))}
-                    </td>
-                  </tr>
-                ))}
+                                ? "bg-green-500/20 text-green-400"
+                                : "bg-red-500/20 text-red-400"
+                            }`}
+                          >
+                            {acc.show_on_leaderboard ? "Visible" : "Hidden"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )
+                )}
               </tbody>
             </table>
           </div>
