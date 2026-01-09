@@ -7,8 +7,9 @@ import {
   BookOpen,
   ExternalLink,
   CheckCircle,
-  ArrowRight,
   Calendar,
+  Trophy,
+  Gift,
 } from "lucide-react";
 
 interface GettingStartedProps {
@@ -109,11 +110,56 @@ export default function GettingStarted({ whopUser }: GettingStartedProps) {
         </p>
       </div>
 
+      {/* Prize Section */}
+      <div className="bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 rounded-xl p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <Trophy className="text-primary" size={20} />
+          <h3 className="text-base font-semibold">Competition Prize</h3>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex-shrink-0">
+            <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
+              <Gift className="text-primary" size={28} />
+            </div>
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-white">
+              {settings?.prize_amount || "$500"}
+            </p>
+            <p className="text-sm text-muted">
+              {settings?.prize_description || "Cash prize for the top trader with highest % gain"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Broker Signup CTA */}
+      {settings?.referral_link && (
+        <div className="bg-card border border-border rounded-xl p-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-semibold mb-1">Ready to Compete?</h3>
+              <p className="text-muted text-sm">Sign up with our partner broker to get started</p>
+            </div>
+            <a
+              href={settings.referral_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 gradient-primary text-white font-medium rounded-lg hover:opacity-90 transition-all text-sm"
+            >
+              <ExternalLink size={16} />
+              Sign Up Now
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Competition Timeline */}
       {settings && (
         <div className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <Calendar className="text-primary" size={18} />
-            <h3 className="text-base font-semibold">Competition Period</h3>
+            <h3 className="text-base font-semibold">Competition Timeline</h3>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-sidebar rounded-lg p-3">
@@ -135,6 +181,21 @@ export default function GettingStarted({ whopUser }: GettingStartedProps) {
                   year: "numeric",
                 })}
               </p>
+            </div>
+          </div>
+          <div className="mt-3 bg-sidebar rounded-lg p-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted">Time Remaining</span>
+              <span className="font-semibold text-primary">
+                {(() => {
+                  const now = new Date();
+                  const end = new Date(settings.end_date);
+                  const diff = end.getTime() - now.getTime();
+                  if (diff <= 0) return "Competition Ended";
+                  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                  return `${days} days`;
+                })()}
+              </span>
             </div>
           </div>
         </div>

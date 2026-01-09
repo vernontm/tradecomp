@@ -37,6 +37,8 @@ export interface CompetitionSettings {
   start_date: string
   end_date: string
   referral_link: string
+  prize_description?: string
+  prize_amount?: string
 }
 
 export interface LeaderboardEntry {
