@@ -144,12 +144,26 @@ export default function Accounts({ whopUser }: AccountsProps) {
           (ea) => ea.account_number === account.accountId
         );
 
+        // Encrypt password before storing
+        const encryptResponse = await fetch("/api/encrypt-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: formData.password }),
+        });
+        
+        if (!encryptResponse.ok) {
+          throw new Error("Failed to encrypt password");
+        }
+        
+        const { encrypted: encryptedPassword } = await encryptResponse.json();
+
         if (existingAccount) {
           const { error: updateError } = await supabase
             .from("trading_accounts")
             .update({
               tl_email: formData.email,
               tl_server: formData.server,
+              tl_password_encrypted: encryptedPassword,
               current_balance: account.balance,
               is_active: true,
               last_updated: new Date().toISOString(),
@@ -165,6 +179,7 @@ export default function Accounts({ whopUser }: AccountsProps) {
               account_type: "tradelocker",
               tl_email: formData.email,
               tl_server: formData.server,
+              tl_password_encrypted: encryptedPassword,
               account_number: account.accountId,
               account_name: account.name,
               starting_balance: account.balance,

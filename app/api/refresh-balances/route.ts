@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { decrypt } from "@/lib/encryption";
 
 function getSupabaseAdmin() {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -68,6 +69,10 @@ async function getAccountBalance(
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = getSupabaseAdmin();
+  const errors: string[] = [];
+  let logId: string | null = null;
+
   try {
     const adminApiKey = request.headers.get("x-admin-api-key");
     const cronSecret = request.headers.get("authorization")?.replace("Bearer ", "");
@@ -80,8 +85,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const supabase = getSupabaseAdmin();
-    
     const { data: accounts, error } = await supabase
       .from("trading_accounts")
       .select("*")
@@ -90,25 +93,50 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
+    // Create cron log entry
+    const { data: logData } = await supabase
+      .from("cron_logs")
+      .insert({
+        job_name: "refresh-balances",
+        status: "started",
+        accounts_total: accounts?.length || 0,
+        accounts_updated: 0,
+      })
+      .select("id")
+      .single();
+
+    logId = logData?.id;
+
     let updated = 0;
     let failed = 0;
 
     for (const account of accounts || []) {
       try {
-        // Note: In production, you'd need to decrypt the password
-        // For now, we'll skip accounts without stored credentials
-        if (!account.tl_email || !account.tl_server) {
+        // Skip accounts without stored credentials
+        if (!account.tl_email || !account.tl_server || !account.tl_password_encrypted) {
+          errors.push(`Account ${account.account_number}: Missing credentials`);
+          failed++;
           continue;
         }
 
-        // This is a simplified version - in production you'd need proper credential handling
+        // Decrypt the password
+        let password: string;
+        try {
+          password = decrypt(account.tl_password_encrypted);
+        } catch (decryptError) {
+          errors.push(`Account ${account.account_number}: Failed to decrypt password`);
+          failed++;
+          continue;
+        }
+
         const accessToken = await authenticateTradeLocker(
           account.tl_email,
-          "", // Password would need to be decrypted
+          password,
           account.tl_server
         );
 
         if (!accessToken) {
+          errors.push(`Account ${account.account_number}: Authentication failed`);
           failed++;
           continue;
         }
@@ -125,11 +153,25 @@ export async function POST(request: NextRequest) {
             .eq("id", account.id);
           updated++;
         } else {
+          errors.push(`Account ${account.account_number}: Failed to fetch balance`);
           failed++;
         }
-      } catch {
+      } catch (accountError: any) {
+        errors.push(`Account ${account.account_number}: ${accountError.message || "Unknown error"}`);
         failed++;
       }
+    }
+
+    // Update cron log with results
+    if (logId) {
+      await supabase
+        .from("cron_logs")
+        .update({
+          status: failed === 0 ? "completed" : "completed",
+          accounts_updated: updated,
+          errors: errors.length > 0 ? errors : null,
+        })
+        .eq("id", logId);
     }
 
     return NextResponse.json({
@@ -137,9 +179,22 @@ export async function POST(request: NextRequest) {
       updated,
       failed,
       total: accounts?.length || 0,
+      errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error: any) {
     console.error("Refresh balances error:", error);
+
+    // Update cron log with failure
+    if (logId) {
+      await supabase
+        .from("cron_logs")
+        .update({
+          status: "failed",
+          errors: [error.message || "Unknown error"],
+        })
+        .eq("id", logId);
+    }
+
     return NextResponse.json(
       { error: "Failed to refresh balances", details: error.message },
       { status: 500 }
