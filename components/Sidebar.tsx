@@ -10,6 +10,7 @@ import {
   ChevronRight,
   X,
   BookOpen,
+  Settings,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -18,7 +19,7 @@ interface SidebarProps {
   mobileOpen: boolean;
   onMobileClose: () => void;
   currentPage: string;
-  onNavigate: (page: "getting-started" | "dashboard" | "leaderboard" | "accounts") => void;
+  onNavigate: (page: "getting-started" | "dashboard" | "leaderboard" | "accounts" | "admin") => void;
   whopUser: WhopUser;
 }
 
@@ -31,11 +32,17 @@ export default function Sidebar({
   onNavigate,
   whopUser,
 }: SidebarProps) {
+  const isAdmin = whopUser.accessLevel === "admin";
+  
   const navItems = [
     { id: "getting-started" as const, icon: BookOpen, label: "Getting Started" },
     { id: "dashboard" as const, icon: LayoutDashboard, label: "Dashboard" },
     { id: "leaderboard" as const, icon: Trophy, label: "Leaderboard" },
     { id: "accounts" as const, icon: Wallet, label: "My Account" },
+  ];
+  
+  const adminItems = [
+    { id: "admin" as const, icon: Settings, label: "Admin Panel" },
   ];
 
   return (
@@ -100,6 +107,39 @@ export default function Sidebar({
                 );
               })}
             </div>
+            
+            {/* Admin Section */}
+            {isAdmin && (
+              <div className="mt-4 pt-3 border-t border-border">
+                {!collapsed && (
+                  <div className="px-2 mb-3">
+                    <p className="text-[10px] font-semibold text-muted uppercase tracking-wider">
+                      Admin
+                    </p>
+                  </div>
+                )}
+                {adminItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = currentPage === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => onNavigate(item.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                        isActive
+                          ? "bg-primary/15 text-white"
+                          : "text-muted hover:bg-card hover:text-white"
+                      } ${collapsed ? "justify-center" : ""}`}
+                    >
+                      <Icon size={18} className={`flex-shrink-0 ${isActive ? "text-primary" : ""}`} />
+                      {!collapsed && (
+                        <span className="text-sm whitespace-nowrap">{item.label}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </nav>
 
           <div className="p-3 border-t border-border">
