@@ -131,9 +131,15 @@ export default function AdminPanel({ whopUser }: AdminPanelProps) {
     try {
       const response = await fetch("/api/refresh-balances", {
         method: "POST",
+        headers: {
+          "x-admin-api-key": process.env.NEXT_PUBLIC_ADMIN_API_KEY || "",
+        },
       });
 
-      if (!response.ok) throw new Error("Failed to refresh balances");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to refresh balances");
+      }
 
       const result = await response.json();
       setMessage({ 
