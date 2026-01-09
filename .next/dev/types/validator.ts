@@ -83,6 +83,24 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../../app/api/debug-accounts/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/debug-accounts">> = Specific
+  const handler = {} as typeof import("../../../app/api/debug-accounts/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../../app/api/encrypt-password/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/encrypt-password">> = Specific
+  const handler = {} as typeof import("../../../app/api/encrypt-password/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../../app/api/refresh-balances/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/refresh-balances">> = Specific

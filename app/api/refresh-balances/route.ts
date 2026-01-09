@@ -89,17 +89,23 @@ export async function POST(request: NextRequest) {
       .from("trading_accounts")
       .select("*")
       .eq("is_active", true)
-      .eq("balance_override", false);
+      .eq("balance_override", false)
+      .not("tl_password_encrypted", "is", null);
 
     if (error) throw error;
 
-    // Create cron log entry
+    // Filter to only accounts with complete credentials
+    const validAccounts = (accounts || []).filter(
+      (acc) => acc.tl_email && acc.tl_server && acc.tl_password_encrypted
+    );
+
+    // Create cron log entry with count of accounts that have credentials
     const { data: logData } = await supabase
       .from("cron_logs")
       .insert({
         job_name: "refresh-balances",
         status: "started",
-        accounts_total: accounts?.length || 0,
+        accounts_total: validAccounts.length,
         accounts_updated: 0,
       })
       .select("id")
@@ -110,14 +116,8 @@ export async function POST(request: NextRequest) {
     let updated = 0;
     let failed = 0;
 
-    for (const account of accounts || []) {
+    for (const account of validAccounts) {
       try {
-        // Skip accounts without stored credentials
-        if (!account.tl_email || !account.tl_server || !account.tl_password_encrypted) {
-          errors.push(`Account ${account.account_number}: Missing credentials`);
-          failed++;
-          continue;
-        }
 
         // Decrypt the password
         let password: string;
@@ -144,14 +144,20 @@ export async function POST(request: NextRequest) {
         const balance = await getAccountBalance(accessToken, account.account_number);
 
         if (balance !== null) {
-          await supabase
+          const { error: updateError } = await supabase
             .from("trading_accounts")
             .update({
               current_balance: balance,
               last_updated: new Date().toISOString(),
             })
             .eq("id", account.id);
-          updated++;
+          
+          if (updateError) {
+            errors.push(`Account ${account.account_number}: Update failed - ${updateError.message}`);
+            failed++;
+          } else {
+            updated++;
+          }
         } else {
           errors.push(`Account ${account.account_number}: Failed to fetch balance`);
           failed++;
@@ -178,7 +184,7 @@ export async function POST(request: NextRequest) {
       success: true,
       updated,
       failed,
-      total: accounts?.length || 0,
+      total: validAccounts.length,
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error: any) {
