@@ -19,7 +19,7 @@ async function authenticateTradeLocker(
   email: string,
   password: string,
   server: string
-): Promise<string | null> {
+): Promise<{ accessToken: string | null; error?: string }> {
   try {
     const response = await fetch(
       "https://live.tradelocker.com/backend-api/auth/jwt/token",
@@ -33,11 +33,15 @@ async function authenticateTradeLocker(
       }
     );
 
-    if (!response.ok) return null;
     const data = await response.json();
-    return data.accessToken || null;
-  } catch {
-    return null;
+    
+    if (!response.ok) {
+      return { accessToken: null, error: data.message || data.error || `HTTP ${response.status}` };
+    }
+    
+    return { accessToken: data.accessToken || null };
+  } catch (err: any) {
+    return { accessToken: null, error: err.message || "Network error" };
   }
 }
 
@@ -129,19 +133,19 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        const accessToken = await authenticateTradeLocker(
+        const authResult = await authenticateTradeLocker(
           account.tl_email,
           password,
           account.tl_server
         );
 
-        if (!accessToken) {
-          errors.push(`Account ${account.account_number}: Authentication failed`);
+        if (!authResult.accessToken) {
+          errors.push(`Auth failed for ${account.tl_email}: ${authResult.error || "Unknown error"}`);
           failed++;
           continue;
         }
 
-        const balance = await getAccountBalance(accessToken, account.account_number);
+        const balance = await getAccountBalance(authResult.accessToken, account.account_number);
 
         if (balance !== null) {
           const { error: updateError } = await supabase
