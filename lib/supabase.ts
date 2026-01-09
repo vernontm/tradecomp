@@ -39,6 +39,7 @@ export interface CompetitionSettings {
   referral_link: string
   prize_description?: string
   prize_amount?: string
+  minimum_balance: number
 }
 
 export interface LeaderboardEntry {

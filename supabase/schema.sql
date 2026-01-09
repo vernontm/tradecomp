@@ -49,6 +49,9 @@ CREATE TABLE IF NOT EXISTS public.competition_settings (
     start_date DATE,
     end_date DATE,
     referral_link TEXT,
+    prize_amount TEXT,
+    prize_description TEXT,
+    minimum_balance DECIMAL(15, 2) DEFAULT 100,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     CONSTRAINT single_row CHECK (id = 1)
@@ -80,7 +83,7 @@ SELECT
     END as percentage_change
 FROM public.trading_accounts ta
 JOIN public.users u ON ta.user_id = u.id
-WHERE ta.starting_balance >= 100 AND ta.show_on_leaderboard = TRUE
+WHERE ta.show_on_leaderboard = TRUE
 ORDER BY percentage_change DESC;
 
 -- Enable Row Level Security

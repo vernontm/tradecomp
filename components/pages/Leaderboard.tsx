@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase, LeaderboardEntry } from "@/lib/supabase";
+import { supabase, LeaderboardEntry, CompetitionSettings } from "@/lib/supabase";
 import { Trophy, TrendingUp, TrendingDown, Clock } from "lucide-react";
 
 export default function Leaderboard() {
@@ -10,6 +10,7 @@ export default function Leaderboard() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [timeUntilNext, setTimeUntilNext] = useState<string>("");
   const [minutesAgo, setMinutesAgo] = useState<number>(0);
+  const [minimumBalance, setMinimumBalance] = useState<number>(100);
 
   useEffect(() => {
     fetchLeaderboard();
@@ -42,6 +43,16 @@ export default function Leaderboard() {
 
   const fetchLeaderboard = async () => {
     try {
+      // Fetch minimum balance setting
+      const { data: settingsData } = await supabase
+        .from("competition_settings")
+        .select("minimum_balance")
+        .single();
+      
+      const minBalance = settingsData?.minimum_balance ?? 100;
+      setMinimumBalance(minBalance);
+
+      // Fetch leaderboard data
       const { data, error } = await supabase
         .from("leaderboard_view")
         .select("*")
@@ -49,7 +60,12 @@ export default function Leaderboard() {
 
       if (error) throw error;
 
-      const formattedData: LeaderboardEntry[] = data.map((entry, index) => ({
+      // Filter by minimum balance (0 means no minimum)
+      const filteredData = minBalance > 0 
+        ? data.filter((entry: any) => entry.starting_balance >= minBalance)
+        : data;
+
+      const formattedData: LeaderboardEntry[] = filteredData.map((entry: any, index: number) => ({
         rank: index + 1,
         username: entry.username,
         account_id: entry.id,

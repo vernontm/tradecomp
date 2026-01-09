@@ -40,6 +40,7 @@ export default function AdminPanel({ whopUser }: AdminPanelProps) {
     referral_link: "",
     prize_amount: "",
     prize_description: "",
+    minimum_balance: "100",
   });
 
   useEffect(() => {
@@ -85,6 +86,7 @@ export default function AdminPanel({ whopUser }: AdminPanelProps) {
           referral_link: settingsData.referral_link || "",
           prize_amount: settingsData.prize_amount || "",
           prize_description: settingsData.prize_description || "",
+          minimum_balance: settingsData.minimum_balance?.toString() || "100",
         });
       }
     } catch (error) {
@@ -108,6 +110,7 @@ export default function AdminPanel({ whopUser }: AdminPanelProps) {
           referral_link: formData.referral_link,
           prize_amount: formData.prize_amount,
           prize_description: formData.prize_description,
+          minimum_balance: parseFloat(formData.minimum_balance) || 0,
         });
 
       if (error) throw error;
@@ -264,6 +267,23 @@ export default function AdminPanel({ whopUser }: AdminPanelProps) {
               placeholder="Cash prize for top trader"
               className="w-full px-3 py-2 bg-sidebar border border-border rounded-lg text-white text-sm focus:outline-none focus:border-primary"
             />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-xs font-medium text-muted mb-1.5">
+              <DollarSign size={12} className="inline mr-1" />
+              Minimum Starting Balance
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                value={formData.minimum_balance}
+                onChange={(e) => setFormData({ ...formData, minimum_balance: e.target.value })}
+                placeholder="100"
+                className="w-32 px-3 py-2 bg-sidebar border border-border rounded-lg text-white text-sm focus:outline-none focus:border-primary"
+              />
+              <span className="text-muted text-sm">Set to 0 to disable minimum requirement</span>
+            </div>
           </div>
         </div>
 
