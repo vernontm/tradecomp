@@ -42,10 +42,10 @@ export default function TradingApp({ whopUser, experienceId }: TradingAppProps) 
   };
 
   return (
-    <div className="min-h-screen bg-dark">
+    <div className="min-h-screen min-h-[100dvh] bg-black whop-embed">
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -61,19 +61,19 @@ export default function TradingApp({ whopUser, experienceId }: TradingAppProps) 
       />
 
       <main
-        className={`transition-all duration-300 min-h-screen ${
-          sidebarCollapsed ? "md:ml-20" : "md:ml-[280px]"
+        className={`transition-all duration-300 min-h-screen min-h-[100dvh] ${
+          sidebarCollapsed ? "md:ml-[72px]" : "md:ml-[260px]"
         }`}
       >
-        <div className="p-4 md:p-8">{renderPage()}</div>
+        <div className="p-3 md:p-6">{renderPage()}</div>
       </main>
 
       <button
-        className="md:hidden fixed top-4 left-4 z-50 bg-primary text-white p-3 rounded-lg shadow-lg"
+        className="md:hidden fixed top-3 left-3 z-50 bg-card border border-border text-white p-2.5 rounded-xl shadow-lg hover:bg-border transition-colors"
         onClick={() => setMobileOpen(true)}
       >
         <svg
-          className="w-6 h-6"
+          className="w-5 h-5"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"

@@ -95,46 +95,44 @@ export default function GettingStarted({ whopUser }: GettingStartedProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-        <div className="flex items-center gap-3 mb-2">
-          <BookOpen className="text-primary" size={32} />
-          <h2 className="text-2xl font-bold text-gradient-primary">
+    <div className="space-y-4">
+      <div className="bg-card border border-border rounded-xl p-5">
+        <div className="flex items-center gap-2 mb-1">
+          <BookOpen className="text-primary" size={24} />
+          <h2 className="text-xl font-bold text-gradient-primary">
             Getting Started
           </h2>
         </div>
-        <p className="text-white/70">
+        <p className="text-muted text-sm">
           Welcome, {whopUser.name}! Follow these steps to join the trading
           competition.
         </p>
       </div>
 
       {settings && (
-        <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Calendar className="text-primary" size={24} />
-            <h3 className="text-lg font-semibold">Competition Period</h3>
+        <div className="bg-card border border-border rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Calendar className="text-primary" size={18} />
+            <h3 className="text-base font-semibold">Competition Period</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white/5 rounded-xl p-4">
-              <p className="text-sm text-white/50 mb-1">Start Date</p>
-              <p className="text-lg font-semibold">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-sidebar rounded-lg p-3">
+              <p className="text-xs text-muted mb-0.5">Start Date</p>
+              <p className="text-sm font-semibold">
                 {new Date(settings.start_date).toLocaleDateString("en-US", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
+                  month: "short",
                   day: "numeric",
+                  year: "numeric",
                 })}
               </p>
             </div>
-            <div className="bg-white/5 rounded-xl p-4">
-              <p className="text-sm text-white/50 mb-1">End Date</p>
-              <p className="text-lg font-semibold">
+            <div className="bg-sidebar rounded-lg p-3">
+              <p className="text-xs text-muted mb-0.5">End Date</p>
+              <p className="text-sm font-semibold">
                 {new Date(settings.end_date).toLocaleDateString("en-US", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
+                  month: "short",
                   day: "numeric",
+                  year: "numeric",
                 })}
               </p>
             </div>
@@ -142,22 +140,22 @@ export default function GettingStarted({ whopUser }: GettingStartedProps) {
         </div>
       )}
 
-      <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-        <h3 className="text-lg font-semibold mb-6">How to Enter</h3>
-        <div className="space-y-6">
+      <div className="bg-card border border-border rounded-xl p-5">
+        <h3 className="text-base font-semibold mb-4">How to Enter</h3>
+        <div className="space-y-4">
           {steps.map((step, index) => (
-            <div key={step.number} className="flex gap-4">
+            <div key={step.number} className="flex gap-3">
               <div className="flex-shrink-0">
-                <div className="w-10 h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold">
+                <div className="w-8 h-8 rounded-full bg-primary/15 text-primary flex items-center justify-center font-bold text-sm">
                   {step.number}
                 </div>
                 {index < steps.length - 1 && (
-                  <div className="w-0.5 h-full bg-white/10 mx-auto mt-2"></div>
+                  <div className="w-0.5 h-full bg-border mx-auto mt-1"></div>
                 )}
               </div>
-              <div className="flex-1 pb-6">
-                <h4 className="font-semibold text-white mb-2">{step.title}</h4>
-                <p className="text-white/70 text-sm mb-3">{step.description}</p>
+              <div className="flex-1 pb-4">
+                <h4 className="font-medium text-sm text-white mb-1">{step.title}</h4>
+                <p className="text-muted text-xs mb-2">{step.description}</p>
                 {step.action}
               </div>
             </div>
@@ -165,37 +163,31 @@ export default function GettingStarted({ whopUser }: GettingStartedProps) {
         </div>
       </div>
 
-      <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-        <h3 className="text-lg font-semibold mb-4">Competition Rules</h3>
-        <ul className="space-y-3">
-          <li className="flex items-start gap-3">
-            <CheckCircle size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-            <span className="text-white/70">
-              Minimum starting balance of $100 required to participate
+      <div className="bg-card border border-border rounded-xl p-5">
+        <h3 className="text-base font-semibold mb-3">Competition Rules</h3>
+        <ul className="space-y-2">
+          <li className="flex items-start gap-2">
+            <CheckCircle size={16} className="text-green-400 flex-shrink-0 mt-0.5" />
+            <span className="text-muted text-sm">
+              Minimum starting balance of $100 required
             </span>
           </li>
-          <li className="flex items-start gap-3">
-            <CheckCircle size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-            <span className="text-white/70">
-              Rankings are based on percentage gain, not absolute profit
+          <li className="flex items-start gap-2">
+            <CheckCircle size={16} className="text-green-400 flex-shrink-0 mt-0.5" />
+            <span className="text-muted text-sm">
+              Rankings based on percentage gain
             </span>
           </li>
-          <li className="flex items-start gap-3">
-            <CheckCircle size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-            <span className="text-white/70">
-              Balances are automatically updated every 15 minutes
+          <li className="flex items-start gap-2">
+            <CheckCircle size={16} className="text-green-400 flex-shrink-0 mt-0.5" />
+            <span className="text-muted text-sm">
+              Balances updated every 15 minutes
             </span>
           </li>
-          <li className="flex items-start gap-3">
-            <CheckCircle size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-            <span className="text-white/70">
-              Only one account per user can be entered in the competition
-            </span>
-          </li>
-          <li className="flex items-start gap-3">
-            <CheckCircle size={20} className="text-green-500 flex-shrink-0 mt-0.5" />
-            <span className="text-white/70">
-              Deposits/withdrawals during competition may affect your standing
+          <li className="flex items-start gap-2">
+            <CheckCircle size={16} className="text-green-400 flex-shrink-0 mt-0.5" />
+            <span className="text-muted text-sm">
+              One account per user in competition
             </span>
           </li>
         </ul>

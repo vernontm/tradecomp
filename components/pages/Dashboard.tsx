@@ -109,12 +109,12 @@ export default function Dashboard({ whopUser }: DashboardProps) {
   const isPositive = percentageChange >= 0;
 
   return (
-    <div className="space-y-6">
-      <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-        <h2 className="text-2xl font-bold text-gradient-primary mb-2">
+    <div className="space-y-4">
+      <div className="bg-card border border-border rounded-xl p-5">
+        <h2 className="text-xl font-bold text-gradient-primary mb-1">
           Trading Dashboard
         </h2>
-        <p className="text-white/70">
+        <p className="text-muted text-sm">
           Welcome back, {whopUser.name}! Here's an overview of your trading
           activity.
         </p>
@@ -122,32 +122,32 @@ export default function Dashboard({ whopUser }: DashboardProps) {
 
       {accounts.length > 1 && (
         <div
-          className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4 relative"
+          className="bg-card border border-border rounded-xl p-4 relative"
           style={{ zIndex: 100 }}
         >
           <div className="flex items-center justify-between">
-            <span className="text-sm text-white/50 uppercase tracking-wider">
+            <span className="text-xs text-muted uppercase tracking-wider">
               Select Account
             </span>
             <div className="relative">
               <button
                 onClick={() => setShowAccountDropdown(!showAccountDropdown)}
-                className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg hover:border-white/30 transition-all"
+                className="flex items-center gap-2 px-3 py-2 bg-sidebar border border-border rounded-lg hover:border-primary/50 transition-all text-sm"
               >
                 <span className="font-medium">
                   {account?.account_name ||
                     `Account #${account?.account_number}`}
                 </span>
                 <ChevronDown
-                  size={16}
-                  className={`transition-transform ${
+                  size={14}
+                  className={`transition-transform text-muted ${
                     showAccountDropdown ? "rotate-180" : ""
                   }`}
                 />
               </button>
               {showAccountDropdown && (
                 <div
-                  className="absolute right-0 mt-2 w-64 bg-sidebar border border-white/10 rounded-xl shadow-2xl"
+                  className="absolute right-0 mt-2 w-64 bg-card border border-border rounded-lg shadow-2xl overflow-hidden"
                   style={{ zIndex: 9999 }}
                 >
                   {accounts.map((acc) => (
@@ -157,14 +157,14 @@ export default function Dashboard({ whopUser }: DashboardProps) {
                         setSelectedAccountId(acc.id);
                         setShowAccountDropdown(false);
                       }}
-                      className={`w-full px-4 py-3 text-left hover:bg-white/5 transition-colors first:rounded-t-xl last:rounded-b-xl ${
-                        acc.id === selectedAccountId ? "bg-primary/20" : ""
+                      className={`w-full px-4 py-3 text-left hover:bg-sidebar transition-colors ${
+                        acc.id === selectedAccountId ? "bg-primary/10" : ""
                       }`}
                     >
-                      <div className="font-medium">
+                      <div className="font-medium text-sm">
                         {acc.account_name || `Account #${acc.account_number}`}
                       </div>
-                      <div className="text-sm text-white/50">
+                      <div className="text-xs text-muted">
                         {acc.currency || "USD"} {acc.current_balance.toFixed(2)}
                         {!acc.show_on_leaderboard && (
                           <span className="ml-2 text-red-400">
@@ -182,59 +182,59 @@ export default function Dashboard({ whopUser }: DashboardProps) {
       )}
 
       {!account ? (
-        <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-            <TrendingUp size={32} className="text-primary" />
+        <div className="bg-card border border-border rounded-xl p-8 text-center">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4">
+            <TrendingUp size={28} className="text-primary" />
           </div>
-          <h3 className="text-xl font-semibold mb-2">
+          <h3 className="text-lg font-semibold mb-2">
             No Trading Account Connected
           </h3>
-          <p className="text-white/70 mb-6">
+          <p className="text-muted text-sm mb-4">
             Connect your TradeLocker account to start competing!
           </p>
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-white/50 uppercase tracking-wider">
+                <p className="text-xs text-muted uppercase tracking-wider">
                   Account Type
                 </p>
-                <DollarSign size={20} className="text-primary" />
+                <DollarSign size={16} className="text-primary" />
               </div>
-              <p className="text-2xl font-bold">
+              <p className="text-xl font-bold">
                 {account.account_type === "tradelocker"
                   ? "TradeLocker"
                   : "MT5"}
               </p>
             </div>
 
-            <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+            <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-white/50 uppercase tracking-wider">
+                <p className="text-xs text-muted uppercase tracking-wider">
                   Current Balance
                 </p>
-                <DollarSign size={20} className="text-primary" />
+                <DollarSign size={16} className="text-primary" />
               </div>
-              <p className="text-2xl font-bold">
+              <p className="text-xl font-bold">
                 ${account.current_balance.toFixed(2)}
               </p>
             </div>
 
-            <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+            <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-white/50 uppercase tracking-wider">
+                <p className="text-xs text-muted uppercase tracking-wider">
                   Total P/L
                 </p>
                 {isPositive ? (
-                  <TrendingUp size={20} className="text-green-500" />
+                  <TrendingUp size={16} className="text-green-500" />
                 ) : (
-                  <TrendingDown size={20} className="text-red-500" />
+                  <TrendingDown size={16} className="text-red-500" />
                 )}
               </div>
               <p
-                className={`text-2xl font-bold ${
+                className={`text-xl font-bold ${
                   isPositive ? "text-green-500" : "text-red-500"
                 }`}
               >
@@ -242,19 +242,19 @@ export default function Dashboard({ whopUser }: DashboardProps) {
               </p>
             </div>
 
-            <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+            <div className="bg-card border border-border rounded-xl p-4">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-white/50 uppercase tracking-wider">
+                <p className="text-xs text-muted uppercase tracking-wider">
                   % Change
                 </p>
                 {isPositive ? (
-                  <TrendingUp size={20} className="text-green-500" />
+                  <TrendingUp size={16} className="text-green-500" />
                 ) : (
-                  <TrendingDown size={20} className="text-red-500" />
+                  <TrendingDown size={16} className="text-red-500" />
                 )}
               </div>
               <p
-                className={`text-2xl font-bold ${
+                className={`text-xl font-bold ${
                   isPositive ? "text-green-500" : "text-red-500"
                 }`}
               >
@@ -264,30 +264,30 @@ export default function Dashboard({ whopUser }: DashboardProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Trophy className="text-primary" size={20} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="bg-card border border-border rounded-xl p-5">
+              <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
+                <Trophy className="text-primary" size={18} />
                 Competition Status
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-white/70">Your Rank</span>
-                  <span className="text-xl font-bold text-primary">
+                  <span className="text-muted text-sm">Your Rank</span>
+                  <span className="text-lg font-bold text-primary">
                     {userRank ? `#${userRank}` : "N/A"}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-white/70">Total Participants</span>
-                  <span className="text-xl font-bold">{totalParticipants}</span>
+                  <span className="text-muted text-sm">Total Participants</span>
+                  <span className="text-lg font-bold">{totalParticipants}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-white/70">Account Status</span>
+                  <span className="text-muted text-sm">Account Status</span>
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                       account.is_active
-                        ? "bg-green-500/20 text-green-500"
-                        : "bg-gray-500/20 text-gray-500"
+                        ? "bg-green-500/15 text-green-400"
+                        : "bg-border text-muted"
                     }`}
                   >
                     {account.is_active ? "Active" : "Inactive"}
@@ -296,22 +296,22 @@ export default function Dashboard({ whopUser }: DashboardProps) {
               </div>
             </div>
 
-            <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-              <h3 className="text-lg font-semibold mb-4">Account Details</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center py-2 border-b border-white/10">
-                  <span className="text-white/70">Account Number</span>
-                  <span className="font-medium">{account.account_number}</span>
+            <div className="bg-card border border-border rounded-xl p-5">
+              <h3 className="text-base font-semibold mb-4">Account Details</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center py-2 border-b border-border">
+                  <span className="text-muted text-sm">Account Number</span>
+                  <span className="font-medium text-sm">{account.account_number}</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-white/10">
-                  <span className="text-white/70">Starting Balance</span>
-                  <span className="font-medium">
+                <div className="flex justify-between items-center py-2 border-b border-border">
+                  <span className="text-muted text-sm">Starting Balance</span>
+                  <span className="font-medium text-sm">
                     ${account.starting_balance.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-white/70">Last Updated</span>
-                  <span className="font-medium">
+                  <span className="text-muted text-sm">Last Updated</span>
+                  <span className="font-medium text-sm">
                     {new Date(account.last_updated).toLocaleDateString()}
                   </span>
                 </div>

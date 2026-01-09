@@ -374,7 +374,7 @@ export default function Accounts({ whopUser }: AccountsProps) {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+      <div className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-center gap-3 mb-2">
           <Wallet className="text-primary" size={32} />
           <h2 className="text-2xl font-bold text-gradient-primary">
@@ -405,7 +405,7 @@ export default function Accounts({ whopUser }: AccountsProps) {
       )}
 
       {existingAccounts.length > 0 && (
-        <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+        <div className="bg-card border border-border rounded-xl p-6">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Wallet size={20} className="text-primary" />
             Linked Accounts ({existingAccounts.length})
@@ -577,7 +577,7 @@ export default function Accounts({ whopUser }: AccountsProps) {
       )}
 
       {step === "credentials" ? (
-        <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
+        <div className="bg-card border border-border rounded-xl p-8">
           <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
             <Wallet size={20} className="text-primary" />
             Account Credentials
@@ -643,7 +643,7 @@ export default function Accounts({ whopUser }: AccountsProps) {
           </form>
         </div>
       ) : (
-        <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
+        <div className="bg-card border border-border rounded-xl p-8">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Wallet size={20} className="text-primary" />
@@ -749,7 +749,7 @@ export default function Accounts({ whopUser }: AccountsProps) {
         </div>
       )}
 
-      <div className="bg-sidebar/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
+      <div className="bg-card border border-border rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4">
           How to Enter Trading Competition
         </h3>
