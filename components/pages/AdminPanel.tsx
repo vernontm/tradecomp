@@ -12,6 +12,7 @@ import {
   Calendar,
   Link,
   DollarSign,
+  AlertCircle,
 } from "lucide-react";
 
 interface AdminPanelProps {
@@ -134,12 +135,38 @@ export default function AdminPanel({ whopUser }: AdminPanelProps) {
 
       if (!response.ok) throw new Error("Failed to refresh balances");
 
-      setMessage({ type: "success", text: "Balances refreshed successfully!" });
+      const result = await response.json();
+      setMessage({ 
+        type: "success", 
+        text: `Balances refreshed! Updated: ${result.updated}, Failed: ${result.failed}, Total: ${result.total}` 
+      });
       fetchData();
     } catch (error: any) {
       setMessage({ type: "error", text: error.message || "Failed to refresh balances" });
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const handleDebugAccounts = async () => {
+    try {
+      const response = await fetch("/api/debug-accounts", {
+        method: "POST",
+        headers: {
+          "x-admin-api-key": process.env.NEXT_PUBLIC_ADMIN_API_KEY || "",
+        },
+      });
+
+      if (!response.ok) throw new Error("Failed to debug accounts");
+
+      const result = await response.json();
+      console.log("Debug accounts:", result);
+      setMessage({ 
+        type: "success", 
+        text: `Debug: ${result.active_accounts} active, ${result.accounts_with_password} with passwords, ${result.accounts_without_password} without passwords` 
+      });
+    } catch (error: any) {
+      setMessage({ type: "error", text: error.message || "Failed to debug accounts" });
     }
   };
 
@@ -304,6 +331,14 @@ export default function AdminPanel({ whopUser }: AdminPanelProps) {
           >
             <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
             {refreshing ? "Refreshing..." : "Refresh Balances"}
+          </button>
+
+          <button
+            onClick={handleDebugAccounts}
+            className="flex items-center gap-2 px-4 py-2 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 text-sm font-medium rounded-lg hover:bg-yellow-500/30 transition-all"
+          >
+            <AlertCircle size={16} />
+            Debug Accounts
           </button>
         </div>
       </div>
