@@ -90,6 +90,17 @@ ORDER BY percentage_change DESC;
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.trading_accounts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.competition_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.cron_logs ENABLE ROW LEVEL SECURITY;
+
+-- Cron logs policies
+CREATE POLICY "Admins can view cron logs"
+    ON public.cron_logs FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.users
+            WHERE users.id = auth.uid() AND users.is_admin = TRUE
+        )
+    );
 
 -- Users policies
 CREATE POLICY "Users can view their own profile"
