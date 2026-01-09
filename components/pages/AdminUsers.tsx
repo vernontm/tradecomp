@@ -37,6 +37,8 @@ export default function AdminUsers({ whopUser }: AdminUsersProps) {
   } | null>(null);
   const [editingAccount, setEditingAccount] = useState<string | null>(null);
   const [editBalance, setEditBalance] = useState<string>("");
+  const [editingStarting, setEditingStarting] = useState<string | null>(null);
+  const [editStartingBalance, setEditStartingBalance] = useState<string>("");
 
   useEffect(() => {
     fetchUsers();
@@ -171,6 +173,55 @@ export default function AdminUsers({ whopUser }: AdminUsersProps) {
   const cancelEditBalance = () => {
     setEditingAccount(null);
     setEditBalance("");
+  };
+
+  const startEditStarting = (account: TradingAccount) => {
+    setEditingStarting(account.id);
+    setEditStartingBalance(account.starting_balance.toString());
+  };
+
+  const cancelEditStarting = () => {
+    setEditingStarting(null);
+    setEditStartingBalance("");
+  };
+
+  const saveStartingBalance = async (accountId: string) => {
+    const newBalance = parseFloat(editStartingBalance);
+    if (isNaN(newBalance)) {
+      setMessage({ type: "error", text: "Invalid balance value" });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("trading_accounts")
+        .update({ starting_balance: newBalance })
+        .eq("id", accountId);
+
+      if (error) throw error;
+
+      setUsers((prev) =>
+        prev.map((user) => ({
+          ...user,
+          accounts: user.accounts.map((acc) =>
+            acc.id === accountId
+              ? { ...acc, starting_balance: newBalance }
+              : acc
+          ),
+        }))
+      );
+      setEditingStarting(null);
+      setEditStartingBalance("");
+      setMessage({
+        type: "success",
+        text: "Starting balance updated successfully.",
+      });
+    } catch (error: any) {
+      setMessage({
+        type: "error",
+        text: "Failed to update starting balance",
+      });
+    }
   };
 
   const saveBalanceOverride = async (accountId: string) => {
@@ -345,8 +396,11 @@ export default function AdminUsers({ whopUser }: AdminUsersProps) {
                 <th className="px-6 py-4 text-left text-sm font-semibold text-white/70 uppercase tracking-wider">
                   Account
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-white/70 uppercase tracking-wider">
-                  Balance
+                <th className="px-6 py-4 text-right text-sm font-semibold text-white/70 uppercase tracking-wider">
+                  Starting
+                </th>
+                <th className="px-6 py-4 text-right text-sm font-semibold text-white/70 uppercase tracking-wider">
+                  Current
                 </th>
                 <th className="px-6 py-4 text-center text-sm font-semibold text-white/70 uppercase tracking-wider">
                   Leaderboard
@@ -373,7 +427,7 @@ export default function AdminUsers({ whopUser }: AdminUsersProps) {
                         </button>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-white/50" colSpan={3}>
+                    <td className="px-6 py-4 text-white/50" colSpan={4}>
                       No accounts
                     </td>
                   </tr>
@@ -409,8 +463,48 @@ export default function AdminUsers({ whopUser }: AdminUsersProps) {
                         </div>
                       </td>
                       <td className="px-6 py-4">
+                        {editingStarting === acc.id ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <input
+                              type="number"
+                              value={editStartingBalance}
+                              onChange={(e) => setEditStartingBalance(e.target.value)}
+                              className="w-28 px-2 py-1 bg-white/10 border border-white/20 rounded text-sm text-right"
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => saveStartingBalance(acc.id)}
+                              className="p-1 text-green-400 hover:bg-green-500/20 rounded"
+                              title="Save"
+                            >
+                              <Check size={16} />
+                            </button>
+                            <button
+                              onClick={cancelEditStarting}
+                              className="p-1 text-red-400 hover:bg-red-500/20 rounded"
+                              title="Cancel"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-end gap-2">
+                            <span className="text-white/70">
+                              ${acc.starting_balance.toFixed(2)}
+                            </span>
+                            <button
+                              onClick={() => startEditStarting(acc)}
+                              className="p-1 text-white/50 hover:text-white hover:bg-white/10 rounded"
+                              title="Edit starting balance"
+                            >
+                              <Edit3 size={14} />
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
                         {editingAccount === acc.id ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-end gap-2">
                             <input
                               type="number"
                               value={editBalance}
@@ -434,7 +528,7 @@ export default function AdminUsers({ whopUser }: AdminUsersProps) {
                             </button>
                           </div>
                         ) : (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-end gap-2">
                             <span className={`font-medium ${acc.balance_override ? "text-yellow-400" : ""}`}>
                               ${acc.current_balance.toFixed(2)}
                             </span>
