@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { createClient } from "@supabase/supabase-js";
 
 interface WhopUserData {
   id: string;
@@ -7,8 +7,21 @@ interface WhopUserData {
   email?: string;
 }
 
+function getSupabase() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Missing Supabase environment variables");
+  }
+  
+  return createClient(supabaseUrl, supabaseAnonKey);
+}
+
 export async function syncWhopUser(whopUser: WhopUserData): Promise<void> {
   try {
+    const supabase = getSupabase();
+    
     const { data: existingUser, error: fetchError } = await supabase
       .from("users")
       .select("id, username")
