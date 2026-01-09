@@ -11,6 +11,7 @@ import {
   X,
   BookOpen,
   Settings,
+  Users,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -19,7 +20,7 @@ interface SidebarProps {
   mobileOpen: boolean;
   onMobileClose: () => void;
   currentPage: string;
-  onNavigate: (page: "getting-started" | "dashboard" | "leaderboard" | "accounts" | "admin") => void;
+  onNavigate: (page: "getting-started" | "dashboard" | "leaderboard" | "accounts" | "admin" | "admin-users") => void;
   whopUser: WhopUser;
 }
 
@@ -42,7 +43,8 @@ export default function Sidebar({
   ];
   
   const adminItems = [
-    { id: "admin" as const, icon: Settings, label: "Admin Panel" },
+    { id: "admin" as const, icon: Settings, label: "Settings" },
+    { id: "admin-users" as const, icon: Users, label: "Users" },
   ];
 
   return (

@@ -7,6 +7,7 @@ import Leaderboard from "./pages/Leaderboard";
 import Accounts from "./pages/Accounts";
 import GettingStarted from "./pages/GettingStarted";
 import AdminPanel from "./pages/AdminPanel";
+import AdminUsers from "./pages/AdminUsers";
 
 export interface WhopUser {
   id: string;
@@ -20,7 +21,7 @@ interface TradingAppProps {
   experienceId: string;
 }
 
-type Page = "getting-started" | "dashboard" | "leaderboard" | "accounts" | "admin";
+type Page = "getting-started" | "dashboard" | "leaderboard" | "accounts" | "admin" | "admin-users";
 
 export default function TradingApp({ whopUser, experienceId }: TradingAppProps) {
   const [currentPage, setCurrentPage] = useState<Page>("getting-started");
@@ -40,6 +41,12 @@ export default function TradingApp({ whopUser, experienceId }: TradingAppProps) 
       case "admin":
         return whopUser.accessLevel === "admin" ? (
           <AdminPanel whopUser={whopUser} />
+        ) : (
+          <GettingStarted whopUser={whopUser} />
+        );
+      case "admin-users":
+        return whopUser.accessLevel === "admin" ? (
+          <AdminUsers whopUser={whopUser} />
         ) : (
           <GettingStarted whopUser={whopUser} />
         );
