@@ -110,13 +110,13 @@ export default function GettingStarted({ whopUser }: GettingStartedProps) {
         </p>
       </div>
 
-      {/* Prize Section */}
+      {/* Prize & Timeline Section */}
       <div className="bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 rounded-xl p-5">
         <div className="flex items-center gap-2 mb-3">
           <Trophy className="text-primary" size={20} />
           <h3 className="text-base font-semibold">Competition Prize</h3>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 mb-4">
           <div className="flex-shrink-0">
             <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
               <Gift className="text-primary" size={28} />
@@ -131,6 +131,50 @@ export default function GettingStarted({ whopUser }: GettingStartedProps) {
             </p>
           </div>
         </div>
+        
+        {/* Timeline in Prize Section */}
+        {settings && (
+          <div className="border-t border-primary/20 pt-4 mt-2">
+            <div className="flex items-center gap-2 mb-2">
+              <Calendar className="text-primary" size={16} />
+              <span className="text-sm font-medium">Competition Period</span>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-muted">Starts:</span>
+                <span className="font-semibold">
+                  {new Date(settings.start_date).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })} at 12:00 AM CST
+                </span>
+              </div>
+              <span className="hidden sm:inline text-muted">→</span>
+              <div className="flex items-center gap-2">
+                <span className="text-muted">Ends:</span>
+                <span className="font-semibold">
+                  {new Date(settings.end_date).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })} at 11:59 PM CST
+                </span>
+              </div>
+            </div>
+            <div className="mt-2 text-xs text-primary font-medium">
+              {(() => {
+                const now = new Date();
+                const end = new Date(settings.end_date);
+                const diff = end.getTime() - now.getTime();
+                if (diff <= 0) return "Competition Ended";
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                return `${days} days, ${hours} hours remaining`;
+              })()}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Broker Signup CTA */}
@@ -150,53 +194,6 @@ export default function GettingStarted({ whopUser }: GettingStartedProps) {
               <ExternalLink size={16} />
               Sign Up Now
             </a>
-          </div>
-        </div>
-      )}
-
-      {/* Competition Timeline */}
-      {settings && (
-        <div className="bg-card border border-border rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <Calendar className="text-primary" size={18} />
-            <h3 className="text-base font-semibold">Competition Timeline</h3>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-sidebar rounded-lg p-3">
-              <p className="text-xs text-muted mb-0.5">Start Date</p>
-              <p className="text-sm font-semibold">
-                {new Date(settings.start_date).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </p>
-            </div>
-            <div className="bg-sidebar rounded-lg p-3">
-              <p className="text-xs text-muted mb-0.5">End Date</p>
-              <p className="text-sm font-semibold">
-                {new Date(settings.end_date).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </p>
-            </div>
-          </div>
-          <div className="mt-3 bg-sidebar rounded-lg p-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted">Time Remaining</span>
-              <span className="font-semibold text-primary">
-                {(() => {
-                  const now = new Date();
-                  const end = new Date(settings.end_date);
-                  const diff = end.getTime() - now.getTime();
-                  if (diff <= 0) return "Competition Ended";
-                  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                  return `${days} days`;
-                })()}
-              </span>
-            </div>
           </div>
         </div>
       )}
