@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS public.trading_accounts (
     tl_server TEXT,
     tl_password_encrypted TEXT,
     account_number TEXT NOT NULL,
+    tl_acc_num TEXT,
     account_name TEXT,
     starting_balance DECIMAL(15, 2) DEFAULT 0,
     current_balance DECIMAL(15, 2) DEFAULT 0,

@@ -53,7 +53,8 @@ async function authenticateTradeLocker(
 
 async function getAccountBalance(
   accessToken: string,
-  accountId: string,
+  accountNumber: string,
+  accNum: string | null,
   accountType: string = "live"
 ): Promise<number | null> {
   try {
@@ -76,7 +77,7 @@ async function getAccountBalance(
     if (!response.ok) return null;
     const data = await response.json();
     const account = data.accounts?.find(
-      (acc: any) => acc.id?.toString() === accountId || acc.accNum?.toString() === accountId
+      (acc: any) => acc.id?.toString() === accountNumber || acc.accNum?.toString() === accNum
     );
     return account ? parseFloat(account.accountBalance) || account.balance : null;
   } catch {
@@ -160,7 +161,7 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        const balance = await getAccountBalance(authResult.accessToken, account.account_number, accountType);
+        const balance = await getAccountBalance(authResult.accessToken, account.account_number, account.tl_acc_num, accountType);
 
         if (balance !== null) {
           const { error: updateError } = await supabase
