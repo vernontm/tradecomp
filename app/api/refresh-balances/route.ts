@@ -140,8 +140,8 @@ export async function POST(request: NextRequest) {
         let password: string;
         try {
           password = decrypt(account.tl_password_encrypted);
-        } catch (decryptError) {
-          errors.push(`Account ${account.account_number}: Failed to decrypt password`);
+        } catch (decryptError: any) {
+          errors.push(`Account ${account.account_number}: Failed to decrypt password - ${decryptError.message}`);
           failed++;
           continue;
         }
