@@ -93,10 +93,12 @@ export async function POST(request: NextRequest) {
   try {
     const adminApiKey = request.headers.get("x-admin-api-key");
     const cronSecret = request.headers.get("authorization")?.replace("Bearer ", "");
+    const vercelCronSecret = request.headers.get("x-vercel-cron-secret");
 
     const isAuthorized =
       adminApiKey === process.env.ADMIN_API_KEY ||
-      cronSecret === process.env.CRON_SECRET;
+      cronSecret === process.env.CRON_SECRET ||
+      vercelCronSecret === process.env.CRON_SECRET;
 
     if (!isAuthorized) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

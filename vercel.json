@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/refresh-balances",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}
