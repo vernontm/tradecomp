@@ -55,8 +55,27 @@ export default function AdminCronLogs({ whopUser }: AdminCronLogsProps) {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchLogs();
-    setRefreshing(false);
+    try {
+      // Trigger the balance refresh job
+      const response = await fetch("/api/refresh-balances", {
+        method: "POST",
+        headers: {
+          "x-admin-api-key": process.env.NEXT_PUBLIC_ADMIN_API_KEY || "",
+        },
+      });
+      
+      if (!response.ok) {
+        console.error("Failed to trigger refresh:", await response.text());
+      }
+      
+      // Wait a moment then fetch updated logs
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await fetchLogs();
+    } catch (error) {
+      console.error("Error triggering refresh:", error);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const getStatusIcon = (status: string) => {
