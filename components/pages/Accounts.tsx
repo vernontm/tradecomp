@@ -558,16 +558,18 @@ export default function Accounts({ whopUser }: AccountsProps) {
               <label className="block text-sm font-medium text-white/70 mb-2 uppercase tracking-wider">
                 Server
               </label>
-              <input
-                type="text"
+              <select
                 value={formData.server}
                 onChange={(e) =>
                   setFormData({ ...formData, server: e.target.value })
                 }
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-all"
-                placeholder="Enter your TradeLocker server"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-all"
                 required
-              />
+              >
+                <option value="" className="bg-card">Select server</option>
+                <option value="PLEXY-live" className="bg-card">PLEXY Live</option>
+                <option value="PLEXY-demo" className="bg-card">PLEXY Demo</option>
+              </select>
             </div>
 
             <button
