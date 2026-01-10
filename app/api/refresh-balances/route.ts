@@ -64,7 +64,7 @@ async function getAccountBalance(
     if (!response.ok) return null;
     const data = await response.json();
     const account = data.accounts?.find(
-      (acc: any) => acc.id?.toString() === accountId
+      (acc: any) => acc.id?.toString() === accountId || acc.accNum?.toString() === accountId
     );
     return account ? parseFloat(account.accountBalance) || account.balance : null;
   } catch {

@@ -31,14 +31,16 @@ export async function GET(request: NextRequest) {
     }
 
     const accounts = data.accounts || [];
+    // accNum = small index (1, 2, 3) - needed for API lookups
+    // id = 6-digit display account number (850196)
     const formattedAccounts = accounts.map((account: any) => ({
-      accountId: account.id?.toString() || account.accountId?.toString() || "",
-      accNum:
-        account.accNum?.toString() || account.accountNumber?.toString() || "",
+      accountId: account.accNum?.toString() || "",
+      accNum: account.accNum?.toString() || "",
+      displayNumber: account.id?.toString() || "",
       name:
         account.name ||
         account.accountName ||
-        `Account ${account.accNum || account.id}`,
+        `Account ${account.id || account.accNum}`,
       balance: parseFloat(account.accountBalance) || account.balance || 0,
       equity: parseFloat(account.equity) || 0,
       margin: parseFloat(account.margin) || 0,

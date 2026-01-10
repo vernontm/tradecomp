@@ -21,6 +21,7 @@ interface AccountsProps {
 interface TradeLockerAccountInfo {
   accountId: string;
   accNum: string;
+  displayNumber: string;
   name: string;
   balance: number;
   equity: number;
@@ -625,7 +626,7 @@ export default function Accounts({ whopUser }: AccountsProps) {
                         )}
                       </div>
                       <p className="text-sm text-white/50 mt-1">
-                        Account #{account.accNum || account.accountId}
+                        Account #{account.displayNumber || account.accNum || account.accountId}
                       </p>
                     </div>
                     <div className="text-right">
