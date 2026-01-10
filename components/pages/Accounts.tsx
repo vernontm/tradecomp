@@ -46,7 +46,7 @@ export default function Accounts({ whopUser }: AccountsProps) {
     email: "",
     password: "",
     server: "",
-    accountType: "demo" as "live" | "demo",
+    accountType: "live" as "live" | "demo",
   });
   const [editingNickname, setEditingNickname] = useState<string | null>(null);
   const [nicknameValue, setNicknameValue] = useState("");
@@ -208,7 +208,7 @@ export default function Accounts({ whopUser }: AccountsProps) {
       setStep("credentials");
       setAvailableAccounts([]);
       setSelectedAccountIds([]);
-      setFormData({ email: "", password: "", server: "", accountType: "demo" });
+      setFormData({ email: "", password: "", server: "", accountType: "live" });
     } catch (error: any) {
       setMessage({
         type: "error",
@@ -575,22 +575,6 @@ export default function Accounts({ whopUser }: AccountsProps) {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-white/70 mb-2 uppercase tracking-wider">
-                Account Type
-              </label>
-              <select
-                value={formData.accountType}
-                onChange={(e) =>
-                  setFormData({ ...formData, accountType: e.target.value as "live" | "demo" })
-                }
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-all"
-                required
-              >
-                <option value="demo" className="bg-card">Demo</option>
-                <option value="live" className="bg-card">Live</option>
-              </select>
-            </div>
 
             <button
               type="submit"
