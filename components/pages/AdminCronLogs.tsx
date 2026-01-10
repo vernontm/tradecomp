@@ -68,9 +68,26 @@ export default function AdminCronLogs({ whopUser }: AdminCronLogsProps) {
         console.error("Failed to trigger refresh:", await response.text());
       }
       
-      // Wait a moment then fetch updated logs
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      await fetchLogs();
+      // Poll for updated logs until job completes
+      let attempts = 0;
+      const maxAttempts = 10;
+      while (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await fetchLogs();
+        
+        // Check if the latest log is completed or failed
+        const { data } = await supabase
+          .from("cron_logs")
+          .select("status")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+        
+        if (data?.status === "completed" || data?.status === "failed") {
+          break;
+        }
+        attempts++;
+      }
     } catch (error) {
       console.error("Error triggering refresh:", error);
     } finally {
