@@ -26,28 +26,31 @@ async function authenticateTradeLocker(
     const baseUrl = accountType === "demo" 
       ? "https://demo.tradelocker.com" 
       : "https://live.tradelocker.com";
-      
-    const response = await fetch(
-      `${baseUrl}/backend-api/auth/jwt/token`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": TRADELOCKER_API_KEY || "",
-        },
-        body: JSON.stringify({ email, password, server }),
-      }
-    );
+    
+    const url = `${baseUrl}/backend-api/auth/jwt/token`;
+    const body = { email, password, server };
+    
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": TRADELOCKER_API_KEY || "",
+      },
+      body: JSON.stringify(body),
+    });
 
     const data = await response.json();
     
     if (!response.ok) {
-      return { accessToken: null, error: data.message || data.error || `HTTP ${response.status}` };
+      return { 
+        accessToken: null, 
+        error: `URL: ${url}, Server: ${server}, AccountType: ${accountType}, Status: ${response.status}, Response: ${JSON.stringify(data)}` 
+      };
     }
     
     return { accessToken: data.accessToken || null };
   } catch (err: any) {
-    return { accessToken: null, error: err.message || "Network error" };
+    return { accessToken: null, error: `Network error: ${err.message}` };
   }
 }
 
