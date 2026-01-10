@@ -88,7 +88,17 @@ async function getAccountBalance(
   }
 }
 
+// GET handler for Vercel Cron (Vercel Cron uses GET requests)
+export async function GET(request: NextRequest) {
+  return handleRefresh(request);
+}
+
+// POST handler for manual triggers
 export async function POST(request: NextRequest) {
+  return handleRefresh(request);
+}
+
+async function handleRefresh(request: NextRequest) {
   const supabase = getSupabaseAdmin();
   const errors: string[] = [];
   let logId: string | null = null;
