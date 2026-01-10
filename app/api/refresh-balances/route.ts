@@ -18,11 +18,17 @@ const TRADELOCKER_API_KEY = process.env.TRADELOCKER_API_KEY;
 async function authenticateTradeLocker(
   email: string,
   password: string,
-  server: string
+  server: string,
+  accountType: string = "live"
 ): Promise<{ accessToken: string | null; error?: string }> {
   try {
+    // Use demo or live URL based on account type
+    const baseUrl = accountType === "demo" 
+      ? "https://demo.tradelocker.com" 
+      : "https://live.tradelocker.com";
+      
     const response = await fetch(
-      "https://live.tradelocker.com/backend-api/auth/jwt/token",
+      `${baseUrl}/backend-api/auth/jwt/token`,
       {
         method: "POST",
         headers: {
@@ -47,11 +53,17 @@ async function authenticateTradeLocker(
 
 async function getAccountBalance(
   accessToken: string,
-  accountId: string
+  accountId: string,
+  accountType: string = "live"
 ): Promise<number | null> {
   try {
+    // Use demo or live URL based on account type
+    const baseUrl = accountType === "demo" 
+      ? "https://demo.tradelocker.com" 
+      : "https://live.tradelocker.com";
+      
     const response = await fetch(
-      "https://live.tradelocker.com/backend-api/auth/jwt/all-accounts",
+      `${baseUrl}/backend-api/auth/jwt/all-accounts`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -133,10 +145,13 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
+        const accountType = account.tl_account_type || "live";
+        
         const authResult = await authenticateTradeLocker(
           account.tl_email,
           password,
-          account.tl_server
+          account.tl_server,
+          accountType
         );
 
         if (!authResult.accessToken) {
@@ -145,7 +160,7 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        const balance = await getAccountBalance(authResult.accessToken, account.account_number);
+        const balance = await getAccountBalance(authResult.accessToken, account.account_number, accountType);
 
         if (balance !== null) {
           const { error: updateError } = await supabase

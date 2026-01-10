@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS public.trading_accounts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     account_type TEXT NOT NULL CHECK (account_type IN ('tradelocker')),
+    tl_account_type TEXT DEFAULT 'live' CHECK (tl_account_type IN ('live', 'demo')),
     tl_email TEXT,
     tl_server TEXT,
     tl_password_encrypted TEXT,

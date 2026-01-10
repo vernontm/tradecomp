@@ -46,6 +46,7 @@ export default function Accounts({ whopUser }: AccountsProps) {
     email: "",
     password: "",
     server: "",
+    accountType: "demo" as "live" | "demo",
   });
   const [editingNickname, setEditingNickname] = useState<string | null>(null);
   const [nicknameValue, setNicknameValue] = useState("");
@@ -83,17 +84,19 @@ export default function Accounts({ whopUser }: AccountsProps) {
           email: formData.email,
           password: formData.password,
           server: formData.server,
+          accountType: formData.accountType,
         }),
       });
 
       const authData = await response.json();
       if (!response.ok) {
-        throw new Error(authData.error || "Authentication failed");
+        throw new Error(authData.error || authData.message || "Authentication failed");
       }
 
       const accountsResponse = await fetch("/api/tradelocker-accounts", {
         headers: {
           Authorization: `Bearer ${authData.accessToken}`,
+          "x-account-type": formData.accountType,
         },
       });
 
@@ -165,6 +168,7 @@ export default function Accounts({ whopUser }: AccountsProps) {
               tl_email: formData.email,
               tl_server: formData.server,
               tl_password_encrypted: encryptedPassword,
+              tl_account_type: formData.accountType,
               current_balance: account.balance,
               is_active: true,
               last_updated: new Date().toISOString(),
@@ -178,6 +182,7 @@ export default function Accounts({ whopUser }: AccountsProps) {
             .insert({
               user_id: whopUser.id,
               account_type: "tradelocker",
+              tl_account_type: formData.accountType,
               tl_email: formData.email,
               tl_server: formData.server,
               tl_password_encrypted: encryptedPassword,
@@ -203,7 +208,7 @@ export default function Accounts({ whopUser }: AccountsProps) {
       setStep("credentials");
       setAvailableAccounts([]);
       setSelectedAccountIds([]);
-      setFormData({ email: "", password: "", server: "" });
+      setFormData({ email: "", password: "", server: "", accountType: "demo" });
     } catch (error: any) {
       setMessage({
         type: "error",
@@ -558,17 +563,32 @@ export default function Accounts({ whopUser }: AccountsProps) {
               <label className="block text-sm font-medium text-white/70 mb-2 uppercase tracking-wider">
                 Server
               </label>
-              <select
+              <input
+                type="text"
                 value={formData.server}
                 onChange={(e) =>
                   setFormData({ ...formData, server: e.target.value })
                 }
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-all"
+                placeholder="e.g. PLEXY"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-white/70 mb-2 uppercase tracking-wider">
+                Account Type
+              </label>
+              <select
+                value={formData.accountType}
+                onChange={(e) =>
+                  setFormData({ ...formData, accountType: e.target.value as "live" | "demo" })
+                }
                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/25 transition-all"
                 required
               >
-                <option value="" className="bg-card">Select server</option>
-                <option value="PLEXY-live" className="bg-card">PLEXY Live</option>
-                <option value="PLEXY-demo" className="bg-card">PLEXY Demo</option>
+                <option value="demo" className="bg-card">Demo</option>
+                <option value="live" className="bg-card">Live</option>
               </select>
             </div>
 

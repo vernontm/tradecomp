@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization");
+    const accountType = request.headers.get("x-account-type") || "live";
+    
     if (!authHeader) {
       return NextResponse.json(
         { error: "Missing authorization header" },
@@ -12,9 +14,14 @@ export async function GET(request: NextRequest) {
 
     const accessToken = authHeader.replace("Bearer ", "");
     const TRADELOCKER_API_KEY = process.env.TRADELOCKER_API_KEY;
+    
+    // Use demo or live URL based on account type
+    const baseUrl = accountType === "demo" 
+      ? "https://demo.tradelocker.com" 
+      : "https://live.tradelocker.com";
 
     const response = await fetch(
-      "https://live.tradelocker.com/backend-api/auth/jwt/all-accounts",
+      `${baseUrl}/backend-api/auth/jwt/all-accounts`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -31,10 +38,10 @@ export async function GET(request: NextRequest) {
     }
 
     const accounts = data.accounts || [];
-    // accNum = small index (1, 2, 3) - needed for API lookups
-    // id = 6-digit display account number (850196)
+    // id = 6-digit account number (850196) - store this as account_number
+    // accNum = small index (3, 4) - internal TradeLocker index
     const formattedAccounts = accounts.map((account: any) => ({
-      accountId: account.accNum?.toString() || "",
+      accountId: account.id?.toString() || "",
       accNum: account.accNum?.toString() || "",
       displayNumber: account.id?.toString() || "",
       name:

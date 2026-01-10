@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, server } = await request.json();
+    const { email, password, server, accountType } = await request.json();
 
     if (!email || !password || !server) {
       return NextResponse.json(
@@ -12,9 +12,14 @@ export async function POST(request: NextRequest) {
     }
 
     const TRADELOCKER_API_KEY = process.env.TRADELOCKER_API_KEY;
+    
+    // Use demo or live URL based on account type
+    const baseUrl = accountType === "demo" 
+      ? "https://demo.tradelocker.com" 
+      : "https://live.tradelocker.com";
 
     const response = await fetch(
-      "https://live.tradelocker.com/backend-api/auth/jwt/token",
+      `${baseUrl}/backend-api/auth/jwt/token`,
       {
         method: "POST",
         headers: {
