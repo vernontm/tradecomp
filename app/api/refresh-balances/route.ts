@@ -108,14 +108,20 @@ async function handleRefresh(request: NextRequest) {
     const cronSecret = request.headers.get("authorization")?.replace("Bearer ", "");
     const vercelCronSecret = request.headers.get("x-vercel-cron-secret");
 
-    const isAuthorized =
-      adminApiKey === process.env.ADMIN_API_KEY ||
-      cronSecret === process.env.CRON_SECRET ||
-      vercelCronSecret === process.env.CRON_SECRET;
+    // Determine auth source for debugging
+    let authSource = "none";
+    if (adminApiKey === process.env.ADMIN_API_KEY) authSource = "admin-api-key";
+    else if (cronSecret === process.env.CRON_SECRET) authSource = "cron-secret";
+    else if (vercelCronSecret === process.env.CRON_SECRET) authSource = "vercel-cron";
+
+    const isAuthorized = authSource !== "none";
 
     if (!isAuthorized) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    
+    // Add auth source to errors for debugging
+    errors.push(`[Auth: ${authSource}]`);
 
     const { data: accounts, error } = await supabase
       .from("trading_accounts")
